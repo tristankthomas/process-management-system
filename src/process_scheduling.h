@@ -7,4 +7,7 @@
 #ifndef PROCESS_SCHEDULING_H
 #define PROCESS_SCHEDULING_H
 
+// function for shortest job first
+
+// function for round robin
 #endif
