@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <unistd.h>
 
 #include "process_data.h"
 #include "process_scheduling.h"
@@ -39,8 +40,10 @@ int main(int argc, char *argv[]) {
 
 
     free(scheduler);
+    scheduler = NULL;
     free(mem_strategy);
     free_processes(processes);
+
     fclose(input_file);
 
     return 0;
@@ -49,15 +52,33 @@ int main(int argc, char *argv[]) {
 void process_args(int argc, char **argv, char **scheduler, char **mem_strategy, int *quantum, FILE **file) {
     // check correct amount of arguments
     assert(argc == NUM_ARGS);
-    *file = fopen(argv[FILE_ARG], "r");
-    assert(*file);
+    int opt;
 
-    *scheduler = strdup(argv[SCHEDULER_ARG]);
-    assert(*scheduler);
-    *mem_strategy = strdup(argv[MEMORY_ARG]);
-    assert(*mem_strategy);
+    while ((opt = getopt(argc, argv, "f:s:m:q:")) != -1) {
+        switch (opt) {
+            case 'm':
+                *mem_strategy = strdup(optarg);
+                assert(*mem_strategy);
+                break;
+            case 's':
+                *scheduler = strdup(optarg);
+                assert(*scheduler);
+                break;
+            case 'f':
+                *file = fopen(optarg, "r");
+                printf("%s\n", optarg);
+                assert(*file);
+                break;
+            case 'q':
+                *quantum = atoi(optarg);
+                break;
+            case '?':
+                exit(EXIT_FAILURE);
 
-    *quantum = atoi(argv[QUANTUM_ARG]);
+        }
+
+    }
+
 
 }
 
