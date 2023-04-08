@@ -73,10 +73,16 @@ int enqueue(queue_t *queue, process_t *process) {
 }
 
 process_t *dequeue(queue_t *queue) {
-
+    if (queue->head == NULL) {
+        return NULL;
+    }
     node_t *head = queue->head;
     queue->head = head->next;
+    if (queue->head == NULL) {
+        queue->tail = NULL;
+    }
     (queue->num_items)--;
+
 
     return head->process;
 }
@@ -95,5 +101,21 @@ void free_processes(queue_t *queue) {
     }
 
     free(queue);
+}
+
+int is_empty(queue_t *queue) {
+    return (queue->head == NULL);
+}
+
+node_t *get_head(queue_t *queue) {
+    return queue->head;
+}
+
+process_t *get_process(node_t *node) {
+    return node->process;
+}
+
+node_t *get_next(node_t *node) {
+    return node->next;
 }
 

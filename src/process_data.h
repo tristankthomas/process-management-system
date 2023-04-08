@@ -13,10 +13,13 @@
 
 typedef enum state state_t;
 typedef struct process process_t;
-typedef struct processes processes_t;
+typedef struct node node_t;
+typedef struct queue queue_t;
 
 process_t *read_process(FILE **file);
 queue_t *load_processes(queue_t *processes, FILE **file);
 void free_process(process_t *process);
+int get_value(process_t *process, char field);
+process_t *get_process(node_t *node);
 
 #endif

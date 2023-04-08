@@ -17,7 +17,7 @@ enum state {
 };
 
 struct process {
-    int time_arrived, service_time, mem_requirement;
+    int arrival_time, service_time, mem_requirement;
     int service_time_left;
     char* name;
     state_t state;
@@ -36,7 +36,7 @@ process_t *read_process(FILE **file) {
         process->state = IDLE;
         process->mem_requirement = mem_requirement;
         process->service_time = service_time;
-        process->time_arrived = time_arrived;
+        process->arrival_time = time_arrived;
         process->name = strdup(name);
         process->service_time_left = service_time;
     } else {
@@ -61,4 +61,25 @@ void free_process(process_t *process) {
 
     free(process->name);
     free(process);
+}
+
+
+int get_value(process_t *process, char field) {
+    switch (field) {
+        case 'a':
+            return process->arrival_time;
+            break;
+        case 's':
+            return process->service_time;
+            break;
+        case 'r':
+            return process->service_time_left;
+            break;
+        case 'm':
+            return process->mem_requirement;
+            break;
+        default:
+            exit(EXIT_FAILURE);
+            break;
+    }
 }

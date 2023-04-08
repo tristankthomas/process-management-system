@@ -19,7 +19,7 @@
 
 void process_args(int argc, char **argv, char **scheduler, char **mem_strategy, int *quantum, FILE **file);
 
-void cycle(int quantum, process_t **processes);
+void cycle(int quantum, queue_t *processes);
 
 int main(int argc, char *argv[]) {
     int quantum;
@@ -32,6 +32,8 @@ int main(int argc, char *argv[]) {
 
     // load processes into linked list
     processes = load_processes(processes, &input_file);
+
+    cycle(quantum, processes);
 
 
     free(scheduler);
@@ -76,15 +78,20 @@ void process_args(int argc, char **argv, char **scheduler, char **mem_strategy, 
 
 }
 
-void cycle(int quantum, process_t **processes) {
+void cycle(int quantum, queue_t *processes) {
     int sim_time = 0;
     int num_cycles;
+    queue_t *input_queue = create_empty_queue();
 
-    for (num_cycles = 0; ; num_cycles++) {
+    for (num_cycles = 0; !is_empty(processes); num_cycles++) {
+        update_input(input_queue, processes, sim_time);
+
+        // allocate memory step
+
+
+
+
         sim_time += quantum;
-
-
-        break;
     }
 
 
