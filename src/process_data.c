@@ -83,3 +83,18 @@ int get_value(process_t *process, char field) {
             break;
     }
 }
+
+int cmp_service_time(process_t *p1, process_t *p2) {
+
+    if (p1->service_time < p2->service_time) {
+        return 0;
+    } else if (p1->service_time > p2->service_time) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+void set_state(process_t *process, state_t state) {
+    process->state = state;
+}

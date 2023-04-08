@@ -21,5 +21,7 @@ queue_t *load_processes(queue_t *processes, FILE **file);
 void free_process(process_t *process);
 int get_value(process_t *process, char field);
 process_t *get_process(node_t *node);
+int cmp_service_time(process_t *p1, process_t *p2);
+void set_state(process_t *process, state_t state);
 
 #endif

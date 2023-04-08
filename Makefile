@@ -2,7 +2,7 @@
 CC = gcc
 CFLAGS = -Wall -g
 EXE = allocate
-OBJ = process_data.o process_scheduling.o memory_allocation.o linked_list.o
+OBJ = process_data.o process_scheduling.o memory_allocation.o linked_list.o min_heap.o
 
 # linking object files to executable
 $(EXE): src/main.c $(OBJ)
