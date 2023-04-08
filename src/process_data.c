@@ -47,12 +47,12 @@ process_t *read_process(FILE **file) {
 
 }
 
-processes_t *load_processes(processes_t *processes, FILE **file) {
+queue_t *load_processes(queue_t *processes, FILE **file) {
 
-    processes = create_empty_list();
+    processes = create_empty_queue();
 
     // adds process to linked list until EOF is reached
-    while (insert_process(processes, read_process(file)));
+    while (enqueue(processes, read_process(file)));
 
     return processes;
 }

@@ -17,26 +17,28 @@ struct node {
     node_t *next;
 };
 
-struct processes {
+struct queue {
     node_t *head;
+    node_t *tail;
     int num_items;
 };
 
-processes_t *create_empty_list() {
+queue_t *create_empty_queue() {
 
-    processes_t *list;
-    list = (processes_t *) malloc(sizeof(*list));
-    assert(list);
+    queue_t *queue;
+    queue = (queue_t *) malloc(sizeof(*queue));
+    assert(queue);
 
-    list->head = NULL;
-    list->num_items = 0;
+    queue->head = NULL;
+    queue->tail = NULL;
+    queue->num_items = 0;
 
-    return list;
+    return queue;
 
 }
 
 
-int insert_process(processes_t *processes, process_t *process) {
+int enqueue(queue_t *queue, process_t *process) {
     // no more processes left
     if (process == NULL) {
         return 0;
@@ -49,35 +51,41 @@ int insert_process(processes_t *processes, process_t *process) {
     new->process = process;
     new->next = NULL;
 
-    if (processes->head == NULL) {
-        processes->head = new;
-        (processes->num_items)++;
+    if (queue->head == NULL) {
+        queue->head = new;
+        queue->tail = new;
+        (queue->num_items)++;
         return 1;
     }
 
-    node_t *current = processes->head;
-    while (current->next != NULL) {
-        current = current->next;
-    }
-    current->next = new;
-    (processes->num_items)++;
+    // tail extended by 1
+    queue->tail->next = new;
+
+    // new tail updated
+    queue->tail = new;
+
+    (queue->num_items)++;
+
+
 
     // success
     return 1;
 }
 
-process_t *pop_head(processes_t *processes) {
-    node_t *head = processes->head;
-    processes->head = head->next;
-    (processes->num_items)--;
+process_t *dequeue(queue_t *queue) {
+
+    node_t *head = queue->head;
+    queue->head = head->next;
+    (queue->num_items)--;
+
     return head->process;
 }
 
-void free_processes(processes_t *processes) {
+void free_processes(queue_t *queue) {
 
     node_t *curr, *prev;
 
-    curr = processes->head;
+    curr = queue->head;
 
     while (curr != NULL) {
         prev = curr;
@@ -86,6 +94,6 @@ void free_processes(processes_t *processes) {
         free(prev);
     }
 
-    free(processes);
+    free(queue);
 }
 

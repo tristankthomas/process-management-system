@@ -16,10 +16,6 @@
 #include "linked_list.h"
 
 #define NUM_ARGS 9
-#define FILE_ARG 2
-#define SCHEDULER_ARG 4
-#define MEMORY_ARG 6
-#define QUANTUM_ARG 8
 
 void process_args(int argc, char **argv, char **scheduler, char **mem_strategy, int *quantum, FILE **file);
 
@@ -29,14 +25,13 @@ int main(int argc, char *argv[]) {
     int quantum;
     char *scheduler = NULL, *mem_strategy = NULL;
     FILE *input_file = NULL;
-    processes_t *processes = NULL;
+    queue_t *processes = NULL;
 
     // process command line arguments
     process_args(argc, argv, &scheduler, &mem_strategy, &quantum, &input_file);
 
     // load processes into linked list
     processes = load_processes(processes, &input_file);
-    process_t *head = pop_head(processes);
 
 
     free(scheduler);
@@ -66,7 +61,6 @@ void process_args(int argc, char **argv, char **scheduler, char **mem_strategy, 
                 break;
             case 'f':
                 *file = fopen(optarg, "r");
-                printf("%s\n", optarg);
                 assert(*file);
                 break;
             case 'q':
