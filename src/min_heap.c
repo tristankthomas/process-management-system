@@ -102,7 +102,8 @@ void free_heap(min_heap_t *heap) {
     free(heap);
 }
 
-
-
+int get_heap_size(min_heap_t *heap) {
+    return heap->num_items;
+}
 
 

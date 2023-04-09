@@ -18,7 +18,6 @@ enum state {
 
 struct process {
     int arrival_time, service_time, mem_requirement;
-    int service_time_left;
     char* name;
     state_t state;
 
@@ -38,7 +37,6 @@ process_t *read_process(FILE **file) {
         process->service_time = service_time;
         process->arrival_time = time_arrived;
         process->name = strdup(name);
-        process->service_time_left = service_time;
     } else {
         process = NULL;
     }
@@ -68,20 +66,35 @@ int get_value(process_t *process, char field) {
     switch (field) {
         case 'a':
             return process->arrival_time;
-            break;
         case 's':
             return process->service_time;
-            break;
-        case 'r':
-            return process->service_time_left;
-            break;
         case 'm':
             return process->mem_requirement;
+        default:
+            exit(EXIT_FAILURE);
+    }
+}
+
+char *get_name(process_t *process) {
+    return process->name;
+}
+
+void set_value(process_t *process, int value, char field) {
+    switch (field) {
+        case 'a':
+            process->arrival_time = value;
+            break;
+        case 's':
+            process->service_time = value;
+            break;
+        case 'm':
+            process->mem_requirement = value;
             break;
         default:
             exit(EXIT_FAILURE);
-            break;
+
     }
+
 }
 
 int cmp_service_time(process_t *p1, process_t *p2) {

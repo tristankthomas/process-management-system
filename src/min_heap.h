@@ -20,5 +20,6 @@ void up_heap(min_heap_t *heap, int index);
 void down_heap(min_heap_t *heap, int index);
 void swap(process_t **p1, process_t **p2);
 void free_heap(min_heap_t *heap);
+int get_heap_size(min_heap_t *heap);
 
 #endif

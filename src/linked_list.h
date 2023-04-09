@@ -22,6 +22,7 @@ int is_empty(queue_t *queue);
 node_t *get_head(queue_t *queue);
 process_t *get_process(node_t *node);
 node_t *get_next(node_t *node);
+int get_queue_size(queue_t *queue);
 
 
 #endif

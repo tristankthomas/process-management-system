@@ -23,5 +23,7 @@ int get_value(process_t *process, char field);
 process_t *get_process(node_t *node);
 int cmp_service_time(process_t *p1, process_t *p2);
 void set_state(process_t *process, state_t state);
+void set_value(process_t *process, int value, char field);
+char *get_name(process_t *process);
 
 #endif

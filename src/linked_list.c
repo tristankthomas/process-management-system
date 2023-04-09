@@ -119,3 +119,7 @@ node_t *get_next(node_t *node) {
     return node->next;
 }
 
+int get_queue_size(queue_t *queue) {
+    return queue->num_items;
+}
+
