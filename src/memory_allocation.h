@@ -13,7 +13,6 @@
 
 typedef enum state state_t;
 
-queue_t *allocate_memory_queue(queue_t *input, queue_t *ready, char *mem_strategy);
-min_heap_t *allocate_memory_pqueue(queue_t *input, min_heap_t *ready, char *mem_strategy);
+void *allocate_memory(queue_t *input, void *ready, char *mem_strategy, int (*insert)(void *, process_t *));
 
 #endif

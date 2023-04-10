@@ -103,8 +103,8 @@ void free_processes(queue_t *queue) {
     free(queue);
 }
 
-int is_empty(queue_t *queue) {
-    return (queue->head == NULL);
+int is_empty_queue(queue_t *queue) {
+    return (queue->num_items == 0);
 }
 
 node_t *get_head(queue_t *queue) {

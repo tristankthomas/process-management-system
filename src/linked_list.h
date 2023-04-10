@@ -18,7 +18,7 @@ queue_t *create_empty_queue();
 int enqueue(queue_t *queue, process_t *process);
 process_t *dequeue(queue_t *queue);
 void free_processes(queue_t *queue);
-int is_empty(queue_t *queue);
+int is_empty_queue(queue_t *queue);
 node_t *get_head(queue_t *queue);
 process_t *get_process(node_t *node);
 node_t *get_next(node_t *node);

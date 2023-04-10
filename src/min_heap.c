@@ -29,7 +29,7 @@ min_heap_t *create_heap() {
 
 }
 
-void insert(min_heap_t *heap, process_t *process) {
+void insert_process(min_heap_t *heap, process_t *process) {
     if (heap->num_items >= heap->capacity) {
         heap->capacity *= 2;
         heap->processes = (process_t **) realloc(heap->processes, heap->capacity * sizeof(process));
@@ -48,9 +48,15 @@ process_t *extract_min(min_heap_t *heap) {
     }
     // extract min
     process_t *min = heap->processes[0];
+    heap->num_items--;
+
+    if (heap->num_items == 1) {
+        heap->processes[0] = NULL;
+        return min;
+    }
     // move last element to first
     heap->processes[0] = heap->processes[heap->num_items - 1];
-    heap->num_items--;
+
 
     down_heap(heap, 0);
 
@@ -104,6 +110,10 @@ void free_heap(min_heap_t *heap) {
 
 int get_heap_size(min_heap_t *heap) {
     return heap->num_items;
+}
+
+int is_empty_heap(min_heap_t *heap) {
+    return (heap->num_items == 0);
 }
 
 

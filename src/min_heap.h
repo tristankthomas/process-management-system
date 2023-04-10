@@ -14,12 +14,13 @@
 typedef struct min_heap min_heap_t;
 
 min_heap_t *create_heap();
-void insert(min_heap_t *heap, process_t *process);
+void insert_process(min_heap_t *heap, process_t *process);
 process_t *extract_min(min_heap_t *heap);
 void up_heap(min_heap_t *heap, int index);
 void down_heap(min_heap_t *heap, int index);
 void swap(process_t **p1, process_t **p2);
 void free_heap(min_heap_t *heap);
 int get_heap_size(min_heap_t *heap);
+int is_empty_heap(min_heap_t *heap);
 
 #endif

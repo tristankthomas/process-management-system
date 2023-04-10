@@ -22,7 +22,7 @@ queue_t *update_input(queue_t *input, queue_t *processes, int sim_time) {
     }
     while(get_value(get_process(get_head(processes)), 'a') <= sim_time) {
         enqueue(input, dequeue(processes));
-        if (is_empty(processes)) {
+        if (is_empty_queue(processes)) {
             break;
         }
     }
@@ -33,6 +33,10 @@ queue_t *update_input(queue_t *input, queue_t *processes, int sim_time) {
 
 
 int update_time(int quantum, process_t *process) {
+    if (process == NULL) {
+        return 0;
+    }
+
     if (get_value(process, 's') - quantum <= 0) {
         set_value(process, 0, 's');
         set_state(process, FINISHED);

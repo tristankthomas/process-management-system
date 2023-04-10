@@ -25,12 +25,9 @@ enum state {
 void process_args(int argc, char **argv, char **scheduler, char **mem_strategy, int *quantum, FILE **file);
 void cycle(int quantum, queue_t *processes, char *scheduler, char *mem_strategy);
 void finish_process(process_t *process, queue_t *finished, int proc_remaining, int sim_time);
-// join functions
-process_t *run_next_process_pq(min_heap_t *ready, int sim_time);
-process_t *run_next_process(queue_t *ready, int sim_time);
+process_t *run_next_process(void *ready, int sim_time, process_t *(*extract)(void *), int (*is_empty)(void *));
 
-
-int main(int argc, char *argv[]) {
+        int main(int argc, char *argv[]) {
     int quantum;
     char *scheduler = NULL, *mem_strategy = NULL;
     FILE *input_file = NULL;
@@ -88,16 +85,15 @@ void process_args(int argc, char **argv, char **scheduler, char **mem_strategy, 
 }
 
 void cycle(int quantum, queue_t *processes, char *scheduler, char *mem_strategy) {
-    int sim_time = 0;
-    int num_cycles;
-    queue_t *input_queue = create_empty_queue();
-    queue_t *ready_queue;
-    queue_t *finished_queue = create_empty_queue();
+    int sim_time = 0, num_cycles;
+    queue_t *input_queue = create_empty_queue(), *finished_queue = create_empty_queue();
+    void *ready_queue;
     int num_processes = get_queue_size(processes);
-    min_heap_t *ready_pqueue;
     process_t *current_process = NULL;
+
     int processes_remaining = 0;
     int run_new_process = 0;
+    int no_process_running = 0;
 
 
     for (num_cycles = 0; ; num_cycles++) {
@@ -108,17 +104,17 @@ void cycle(int quantum, queue_t *processes, char *scheduler, char *mem_strategy)
             // for first cycle
             if (num_cycles == 0) {
                 update_input(input_queue, processes, sim_time);
-                ready_pqueue = create_heap();
-                ready_pqueue = allocate_memory_pqueue(input_queue, ready_pqueue, mem_strategy);
-                current_process = run_next_process_pq(ready_pqueue, sim_time);
+                ready_queue = create_heap();
+                ready_queue = allocate_memory(input_queue, ready_queue, mem_strategy, (int (*)(void *, process_t *)) insert_process);
+                current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) extract_min, (int (*)(void *)) is_empty_heap);
                 sim_time += quantum;
                 continue;
             }
 
             // updates service time of current process and finishes process if finished
             if ((run_new_process = update_time(quantum, current_process))) {
-                // could add function for finishing process and starting process in process_scheduling.c
-                processes_remaining = get_queue_size(input_queue) + get_heap_size(ready_pqueue);
+
+                processes_remaining = get_queue_size(input_queue) + get_heap_size(ready_queue);
                 finish_process(current_process, finished_queue, processes_remaining, sim_time);
 
                 if (get_queue_size(finished_queue) == num_processes) {
@@ -129,14 +125,13 @@ void cycle(int quantum, queue_t *processes, char *scheduler, char *mem_strategy)
             // updates input queue
             update_input(input_queue, processes, sim_time);
             // updates ready queue
-            ready_pqueue = allocate_memory_pqueue(input_queue, ready_pqueue, mem_strategy);
+
+            ready_queue = allocate_memory(input_queue, ready_queue, mem_strategy, (int (*)(void *, process_t *)) insert_process);
             // starts new process
-            if (run_new_process) {
-                current_process = run_next_process_pq(ready_pqueue, sim_time);
+            if (run_new_process || (!is_empty_heap(ready_queue) && no_process_running)) {
+                current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) extract_min, (int (*)(void *)) is_empty_heap);
+                no_process_running = (current_process == NULL) ? 1 : 0;
             }
-
-
-
 
 
             // need to use linked list
@@ -146,16 +141,17 @@ void cycle(int quantum, queue_t *processes, char *scheduler, char *mem_strategy)
             if (num_cycles == 0) {
                 update_input(input_queue, processes, sim_time);
                 ready_queue = create_empty_queue();
-                ready_queue = allocate_memory_queue(input_queue, ready_queue, mem_strategy);
-                current_process = run_next_process(ready_queue, sim_time);
+                ready_queue = allocate_memory(input_queue, ready_queue, mem_strategy,  (int (*)(void *, process_t *)) enqueue);
+                current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) dequeue, (int (*)(void *)) is_empty_queue);
                 sim_time += quantum;
                 continue;
             }
 
             // updates service time of current process and finishes process if finished
             if ((run_new_process = update_time(quantum, current_process))) {
-                // could add function for finishing process and starting process in process_scheduling.c
+
                 processes_remaining = get_queue_size(input_queue) + get_queue_size(ready_queue);
+
                 finish_process(current_process, finished_queue, processes_remaining, sim_time);
 
                 if (get_queue_size(finished_queue) == num_processes) {
@@ -167,23 +163,16 @@ void cycle(int quantum, queue_t *processes, char *scheduler, char *mem_strategy)
             // updates input queue
             update_input(input_queue, processes, sim_time);
             // updates ready queue
-            ready_queue = allocate_memory_queue(input_queue, ready_queue, mem_strategy);
+            ready_queue = allocate_memory(input_queue, ready_queue, mem_strategy, (int (*)(void *, process_t *)) enqueue);
 
             // suspend processes and decide which to run
             if (run_new_process) {
-                current_process = run_next_process(ready_queue, sim_time);
-            } else if (!is_empty(ready_queue)) {
+                current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) dequeue, (int (*)(void *)) is_empty_queue);
+            } else if (!is_empty_queue(ready_queue)) {
                 enqueue(ready_queue, current_process);
-                current_process = run_next_process(ready_queue, sim_time);
-//                if (run_new_process) {
-//
-//                }
-
-
+                current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) dequeue, (int (*)(void *)) is_empty_queue);
 
             }
-
-
 
 
         }
@@ -201,16 +190,14 @@ void finish_process(process_t *process, queue_t *finished, int proc_remaining, i
     printf("%d,FINISHED,process_name=%s,proc_remaining=%d\n", sim_time, get_name(process), proc_remaining);
 }
 
-process_t *run_next_process_pq(min_heap_t *ready, int sim_time) {
-    process_t *current_process = extract_min(ready);
-    set_state(current_process, RUNNING);
-    printf("%d,RUNNING,process_name=%s,remaining_time=%d\n", sim_time, get_name(current_process), get_value(current_process, 's'));
-    return current_process;
-}
 
 
-process_t *run_next_process(queue_t *ready, int sim_time) {
-    process_t *current_process = dequeue(ready);
+process_t *run_next_process(void *ready, int sim_time, process_t *(*extract)(void *), int (*is_empty)(void *)) {
+    if (is_empty(ready)) {
+        return NULL;
+    }
+    process_t *current_process = extract(ready);
+
     set_state(current_process, RUNNING);
     printf("%d,RUNNING,process_name=%s,remaining_time=%d\n", sim_time, get_name(current_process), get_value(current_process, 's'));
     return current_process;
