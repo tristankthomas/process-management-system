@@ -14,5 +14,6 @@
 typedef enum state state_t;
 
 void *allocate_memory(queue_t *input, void *ready, char *mem_strategy, int (*insert)(void *, process_t *));
+void deallocate_memory(process_t *process, char *mem_strategy);
 
 #endif

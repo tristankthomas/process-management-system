@@ -27,7 +27,7 @@ void cycle(int quantum, queue_t *processes, char *scheduler, char *mem_strategy)
 void finish_process(process_t *process, queue_t *finished, int proc_remaining, int sim_time);
 process_t *run_next_process(void *ready, int sim_time, process_t *(*extract)(void *), int (*is_empty)(void *));
 
-        int main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
     int quantum;
     char *scheduler = NULL, *mem_strategy = NULL;
     FILE *input_file = NULL;
@@ -45,7 +45,7 @@ process_t *run_next_process(void *ready, int sim_time, process_t *(*extract)(voi
     free(scheduler);
     scheduler = NULL;
     free(mem_strategy);
-    free_processes(processes);
+    free_list(processes, (void (*)(void *)) free_process);
 
     fclose(input_file);
 

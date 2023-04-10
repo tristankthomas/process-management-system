@@ -37,3 +37,14 @@ void *allocate_memory(queue_t *input, void *ready, char *mem_strategy, int (*ins
 
     return ready;
 }
+
+void deallocate_memory(process_t *process, char *mem_strategy) {
+    if (strcmp(mem_strategy, "infinity") == 0) {
+
+
+    } else if (strcmp(mem_strategy, "best-fit") == 0) {
+
+
+    }
+
+}

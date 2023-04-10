@@ -13,7 +13,7 @@
 
 
 struct node {
-    process_t *process;
+    void *data;
     node_t *next;
 };
 
@@ -38,9 +38,9 @@ queue_t *create_empty_queue() {
 }
 
 
-int enqueue(queue_t *queue, process_t *process) {
-    // no more processes left
-    if (process == NULL) {
+int enqueue(queue_t *queue, void *data) {
+
+    if (data == NULL) {
         return 0;
     }
 
@@ -48,7 +48,7 @@ int enqueue(queue_t *queue, process_t *process) {
 
     new = (node_t *) malloc(sizeof(*new));
     assert(new);
-    new->process = process;
+    new->data = data;
     new->next = NULL;
 
     if (queue->head == NULL) {
@@ -72,7 +72,7 @@ int enqueue(queue_t *queue, process_t *process) {
     return 1;
 }
 
-process_t *dequeue(queue_t *queue) {
+void *dequeue(queue_t *queue) {
     if (queue->head == NULL) {
         return NULL;
     }
@@ -84,10 +84,10 @@ process_t *dequeue(queue_t *queue) {
     (queue->num_items)--;
 
 
-    return head->process;
+    return head->data;
 }
 
-void free_processes(queue_t *queue) {
+void free_list(queue_t *queue, void (*free_data)(void *)) {
 
     node_t *curr, *prev;
 
@@ -96,7 +96,7 @@ void free_processes(queue_t *queue) {
     while (curr != NULL) {
         prev = curr;
         curr = curr->next;
-        free_process(prev->process);
+        free_data(prev->data);
         free(prev);
     }
 
@@ -111,8 +111,8 @@ node_t *get_head(queue_t *queue) {
     return queue->head;
 }
 
-process_t *get_process(node_t *node) {
-    return node->process;
+void *get_data(node_t *node) {
+    return node->data;
 }
 
 node_t *get_next(node_t *node) {

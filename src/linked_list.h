@@ -15,12 +15,12 @@ typedef struct queue queue_t;
 typedef struct process process_t;
 
 queue_t *create_empty_queue();
-int enqueue(queue_t *queue, process_t *process);
-process_t *dequeue(queue_t *queue);
-void free_processes(queue_t *queue);
+int enqueue(queue_t *queue, void *data);
+void *dequeue(queue_t *queue);
+void free_list(queue_t *queue, void (*free_data)(void *));
 int is_empty_queue(queue_t *queue);
 node_t *get_head(queue_t *queue);
-process_t *get_process(node_t *node);
+void *get_data(node_t *node);
 node_t *get_next(node_t *node);
 int get_queue_size(queue_t *queue);
 
