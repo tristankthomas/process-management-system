@@ -23,11 +23,11 @@ enum state {
 };
 
 void process_args(int argc, char **argv, char **scheduler, char **mem_strategy, int *quantum, FILE **file);
-
 void cycle(int quantum, queue_t *processes, char *scheduler, char *mem_strategy);
 void finish_process(process_t *process, queue_t *finished, int proc_remaining, int sim_time);
 // join functions
 process_t *run_next_process_pq(min_heap_t *ready, int sim_time);
+process_t *run_next_process(queue_t *ready, int sim_time);
 
 
 int main(int argc, char *argv[]) {
@@ -136,13 +136,59 @@ void cycle(int quantum, queue_t *processes, char *scheduler, char *mem_strategy)
             }
 
 
+
+
+
             // need to use linked list
         } else if (strcmp(scheduler, "RR") == 0) {
 
-            if (num_cycles == 0) ready_queue = create_empty_queue();
+            // for first cycle
+            if (num_cycles == 0) {
+                update_input(input_queue, processes, sim_time);
+                ready_queue = create_empty_queue();
+                ready_queue = allocate_memory_queue(input_queue, ready_queue, mem_strategy);
+                current_process = run_next_process(ready_queue, sim_time);
+                sim_time += quantum;
+                continue;
+            }
 
+            // updates service time of current process and finishes process if finished
+            if ((run_new_process = update_time(quantum, current_process))) {
+                // could add function for finishing process and starting process in process_scheduling.c
+                processes_remaining = get_queue_size(input_queue) + get_queue_size(ready_queue);
+                finish_process(current_process, finished_queue, processes_remaining, sim_time);
+
+                if (get_queue_size(finished_queue) == num_processes) {
+                    break;
+                }
+
+            }
+
+            // updates input queue
+            update_input(input_queue, processes, sim_time);
+            // updates ready queue
             ready_queue = allocate_memory_queue(input_queue, ready_queue, mem_strategy);
+
+            // suspend processes and decide which to run
+            if (run_new_process) {
+                current_process = run_next_process(ready_queue, sim_time);
+            } else if (!is_empty(ready_queue)) {
+                enqueue(ready_queue, current_process);
+                current_process = run_next_process(ready_queue, sim_time);
+//                if (run_new_process) {
+//
+//                }
+
+
+
+            }
+
+
+
+
         }
+
+
         // update simulation time
         sim_time += quantum;
     }
@@ -158,7 +204,15 @@ void finish_process(process_t *process, queue_t *finished, int proc_remaining, i
 process_t *run_next_process_pq(min_heap_t *ready, int sim_time) {
     process_t *current_process = extract_min(ready);
     set_state(current_process, RUNNING);
-    printf("%d,RUNNING,process_name=%s,proc_remaining=%d\n", sim_time, get_name(current_process), get_value(current_process, 's'));
+    printf("%d,RUNNING,process_name=%s,remaining_time=%d\n", sim_time, get_name(current_process), get_value(current_process, 's'));
+    return current_process;
+}
+
+
+process_t *run_next_process(queue_t *ready, int sim_time) {
+    process_t *current_process = dequeue(ready);
+    set_state(current_process, RUNNING);
+    printf("%d,RUNNING,process_name=%s,remaining_time=%d\n", sim_time, get_name(current_process), get_value(current_process, 's'));
     return current_process;
 }
 
