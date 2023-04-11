@@ -34,7 +34,7 @@ int get_list_size(list_t *list);
 list_node_t *create_list_node(void *data, list_node_t *next, list_node_t *prev);
 void insert_node_sorted(list_t *list, list_node_t *node, int (*compare)(void *, void *), void *(*get_sort_value)(void *));
 void delete_node(list_t *list, list_node_t *node);
-void insert_list_node(list_t* list, void *data, list_node_t *prev, list_node_t *next);
+list_node_t *insert_list_node(list_t* list, void *data, list_node_t *prev, list_node_t *next);
 
 
 #endif

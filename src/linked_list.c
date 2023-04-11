@@ -177,21 +177,23 @@ void delete_node(list_t *list, list_node_t *node) {
 
 }
 
-void insert_list_node(list_t* list, void *data, list_node_t *prev, list_node_t *next) {
+list_node_t *insert_list_node(list_t* list, void *data, list_node_t *prev, list_node_t *next) {
     list_node_t *new = create_list_node(data, next, prev);
 
     if (prev != NULL) {
         prev->next = new;
     } else {
-        list->tail = new;
+        list->head = new;
     }
     if (next != NULL) {
         next->prev = new;
     } else {
-        list->head = new;
+        list->tail = new;
     }
 
     list->num_items++;
+
+    return new;
 }
 
 int is_empty_list(list_t *list) {

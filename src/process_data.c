@@ -25,7 +25,7 @@ struct process {
     int arrival_time, service_time, mem_requirement;
     char* name;
     state_t state;
-    block_t *block;
+    list_node_t *block_node;
 };
 
 
@@ -121,10 +121,10 @@ void set_state(process_t *process, state_t state) {
     process->state = state;
 }
 
-void set_block(process_t *process, block_t *block) {
-    process->block = block;
+void set_block_node(process_t *process, list_node_t *block_node) {
+    process->block_node = block_node;
 }
 
-block_t *get_block(process_t *process) {
-    return process->block;
+list_node_t *get_block_node(process_t *process) {
+    return process->block_node;
 }

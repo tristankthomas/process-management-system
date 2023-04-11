@@ -24,7 +24,7 @@ enum state {
 
 void process_args(int argc, char **argv, char **scheduler, char **mem_strategy, int *quantum, FILE **file);
 void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy);
-void finish_process(process_t *process, list_t *finished, int proc_remaining, int sim_time, char *mem_strategy);
+void finish_process(process_t *process, list_t *finished, list_t *memory, list_t *holes, int proc_remaining, int sim_time, char *mem_strategy);
 process_t *run_next_process(void *ready, int sim_time, process_t *(*extract)(void *), int (*is_empty)(void *));
 
 int main(int argc, char *argv[]) {
@@ -120,7 +120,7 @@ void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) 
             if ((run_new_process = update_time(quantum, current_process))) {
 
                 processes_remaining = get_list_size(input_queue) + get_heap_size(ready_queue);
-                finish_process(current_process, finished_queue, processes_remaining, sim_time, mem_strategy);
+                finish_process(current_process, finished_queue, memory, holes, processes_remaining, sim_time, mem_strategy);
 
                 if (get_list_size(finished_queue) == num_processes) {
                     break;
@@ -157,7 +157,7 @@ void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) 
 
                 processes_remaining = get_list_size(input_queue) + get_list_size(ready_queue);
 
-                finish_process(current_process, finished_queue, processes_remaining, sim_time, mem_strategy);
+                finish_process(current_process, finished_queue, memory, holes, processes_remaining, sim_time, mem_strategy);
 
                 if (get_list_size(finished_queue) == num_processes) {
                     break;
@@ -189,11 +189,11 @@ void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) 
 
 }
 
-void finish_process(process_t *process, list_t *finished, int proc_remaining, int sim_time, char *mem_strategy) {
+void finish_process(process_t *process, list_t *finished, list_t *memory, list_t *holes, int proc_remaining, int sim_time, char *mem_strategy) {
     set_state(process, FINISHED);
     enqueue(finished, process);
     printf("%d,FINISHED,process_name=%s,proc_remaining=%d\n", sim_time, get_name(process), proc_remaining);
-    deallocate_memory(process, mem_strategy);
+    deallocate_memory(process, memory, holes, mem_strategy);
 }
 
 

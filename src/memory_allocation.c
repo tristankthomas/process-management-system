@@ -58,24 +58,18 @@ void *allocate_memory(list_t *memory, list_t *holes, list_t *input, void *ready,
 
 
 int best_fit(list_t *holes, list_t *memory, process_t *process) {
-    int is_space = 1;
+    int is_space;
     list_node_t *curr = get_head(holes);
-    list_node_t *prev = curr;
     list_node_t *best_fit = NULL;
 
     // try to refactor this!
     while ((is_space = (curr != NULL))) {
         block_t *curr_block = (block_t *) get_data(get_data(curr));
-        // if I hit the end and the previous hole is big enough then pick that
-        // when the first memory block that is too large is found (previous one will be best fit)
-        if (get_value(process, 'm') > curr_block->size) {
-            best_fit = prev;
-            break;
-        } else if (get_next(curr) == NULL && (curr_block->size >= get_value(process, 'm'))) {
+        // keep iterating until block is bigger than or equal to what is needed (will be best-fit since sorted from smallest to largest)
+        if (curr_block->size >= get_value(process, 'm')) {
             best_fit = curr;
             break;
         }
-        prev = curr;
         curr = get_next(curr);
     }
 
@@ -99,29 +93,85 @@ void split(process_t *process, list_node_t *node, list_t *holes, list_t *memory)
     int start_address = old_block->start_address;
     // block stored in new node
     block_t *new_block = create_block(PROCESS, start_address, new_size);
-    set_block(process, new_block);
-    // (block_t *) get_data(memory->head)
+
     old_block->type = HOLE;
     old_block->start_address = start_address + new_size;
     old_block->size = prev_size - new_size;
 
-    insert_list_node(memory, new_block, get_prev(node), node);
+    list_node_t *prev_node = get_prev(node);
+    if (old_block->size == 0) {
+        // free node
+        node = NULL;
+        // node essentially deleted
+        set_num_items(memory, get_num_items(memory) - 1);
+    } else {
+        insert_node_sorted(holes, node, (int (*)(void *, void *)) compare_sizes, (void *(*)(void *)) get_size);
+    }
 
-    insert_node_sorted(holes, node, (int (*)(void *, void *)) compare_sizes, (void *(*)(void *)) get_size);
-
+    list_node_t *new_node = insert_list_node(memory, new_block, prev_node, node);
+    set_block_node(process, new_node);
 
 }
 
-void deallocate_memory(process_t *process, char *mem_strategy) {
+void deallocate_memory(process_t *process, list_t *memory, list_t *holes, char *mem_strategy) {
     if (strcmp(mem_strategy, "infinity") == 0) {
 
+        return;
 
     } else if (strcmp(mem_strategy, "best-fit") == 0) {
+        list_node_t *block_node = get_block_node(process);
+
+        ((block_t *) get_data(block_node))->type = HOLE;
+
+        // check to right
+        if (get_next(block_node) != NULL) {
+            check_direction(memory, block_node, get_next);
+        }
+
+
+        // check to left
+        if (get_prev(block_node) != NULL) {
+            check_direction(memory, block_node, get_prev);
+        }
+        // need to delete holes from holes list when updating memory
+        insert_node_sorted(holes, block_node, (int (*)(void *, void *)) compare_sizes, (void *(*)(void *)) get_size);
+        set_block_node(process, NULL);
 
 
     }
 
 }
+
+void check_direction(list_t *memory, list_node_t *block_node, list_node_t *(*get_dir)(list_node_t *)) {
+
+    list_node_t *curr = get_dir(block_node);
+    block_t *curr_block = (block_t *) get_data(curr);
+
+    while (curr_block->type == HOLE) {
+        update_memory(memory, block_node, curr);
+        curr = get_dir(curr);
+        if (curr == NULL) {
+            break;
+        }
+        curr_block = (block_t *) get_data(curr);
+    }
+}
+
+void update_memory(list_t *memory, list_node_t *main_node, list_node_t *adj_node) {
+    block_t *adj_block = (block_t *) get_data(adj_node);
+    block_t *main_block = (block_t *) get_data(main_node);
+    int adj_start_address = adj_block->start_address;
+    int main_start_address = main_block->start_address;
+
+    main_block->start_address = (adj_start_address < main_start_address) ? adj_start_address : main_start_address;
+    main_block->size += adj_block->size;
+    delete_node(memory, adj_node);
+    // maybe free later
+}
+
+
+
+
 
 
 void initialise_memory(list_t *memory, list_t *holes) {
@@ -148,7 +198,7 @@ void process_ready(process_t *process, void *ready, int sim_time, char *mem_stra
     set_state(process, READY);
     insert(ready, process);
     if (strcmp(mem_strategy, "best-fit") == 0) {
-        printf("%d,READY,process_name=%s,assigned_at=%d\n", sim_time, get_name(process), get_block(process)->start_address);
+        printf("%d,READY,process_name=%s,assigned_at=%d\n", sim_time, get_name(process), ((block_t *) get_data(get_block_node(process)))->start_address);
     }
 
 }

@@ -12,6 +12,7 @@
 #define INIT_SIZE 2
 
 typedef struct min_heap min_heap_t;
+typedef struct process process_t;
 
 min_heap_t *create_heap();
 void insert_process(min_heap_t *heap, process_t *process);
