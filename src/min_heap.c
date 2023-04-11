@@ -50,12 +50,12 @@ process_t *extract_min(min_heap_t *heap) {
     process_t *min = heap->processes[0];
     heap->num_items--;
 
-    if (heap->num_items == 1) {
+    if (heap->num_items == 0) {
         heap->processes[0] = NULL;
         return min;
     }
     // move last element to first
-    heap->processes[0] = heap->processes[heap->num_items - 1];
+    heap->processes[0] = heap->processes[heap->num_items];
 
 
     down_heap(heap, 0);

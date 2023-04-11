@@ -38,8 +38,7 @@ void *allocate_memory(list_t *memory, list_t *holes, list_t *input, void *ready,
 
         // transfer the process straight to ready
         while ((process = dequeue(input)) != NULL) {
-            set_state(process, READY);
-            insert(ready, process);
+            process_ready(process, ready, sim_time, mem_strategy, insert);
         }
 
     } else if (strcmp(mem_strategy, "best-fit") == 0) {
@@ -47,11 +46,8 @@ void *allocate_memory(list_t *memory, list_t *holes, list_t *input, void *ready,
         while ((process = dequeue(input)) != NULL) {
 
             if (best_fit(holes, memory, process)) {
-
-                process_ready(process, ready, sim_time, insert);
-
+                process_ready(process, ready, sim_time, mem_strategy, insert);
             }
-
         }
 
 
@@ -148,10 +144,13 @@ int *get_size(block_t *block) {
     return &block->size;
 }
 
-void process_ready(process_t *process, void *ready, int sim_time, int (*insert)(void *, process_t *)) {
+void process_ready(process_t *process, void *ready, int sim_time, char *mem_strategy, int (*insert)(void *, process_t *)) {
     set_state(process, READY);
     insert(ready, process);
-    printf("%d,READY,process_name=%s,assigned_at=%d\n", sim_time, get_name(process), get_block(process)->start_address);
+    if (strcmp(mem_strategy, "best-fit") == 0) {
+        printf("%d,READY,process_name=%s,assigned_at=%d\n", sim_time, get_name(process), get_block(process)->start_address);
+    }
+
 }
 
 int compare_sizes(int *size1, int *size2) {
