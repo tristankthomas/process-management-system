@@ -16,13 +16,13 @@ enum state {
     IDLE, READY, RUNNING, FINISHED
 };
 
-queue_t *update_input(queue_t *input, queue_t *processes, int sim_time) {
+list_t *update_input(list_t *input, list_t *processes, int sim_time) {
     if (get_head(processes) == NULL) {
         return NULL;
     }
     while(get_value(get_data(get_head(processes)), 'a') <= sim_time) {
         enqueue(input, dequeue(processes));
-        if (is_empty_queue(processes)) {
+        if (is_empty_list(processes)) {
             break;
         }
     }

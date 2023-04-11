@@ -11,17 +11,25 @@
 
 #include "process_data.h"
 #include "linked_list.h"
+#include "memory_allocation.h"
 
 enum state {
     IDLE, READY, RUNNING, FINISHED
+};
+
+enum block_type {
+    PROCESS, HOLE
 };
 
 struct process {
     int arrival_time, service_time, mem_requirement;
     char* name;
     state_t state;
-
+    block_t *block;
 };
+
+
+
 
 
 
@@ -40,14 +48,15 @@ process_t *read_process(FILE **file) {
     } else {
         process = NULL;
     }
+    //process->block = NULL;
 
     return process;
 
 }
 
-queue_t *load_processes(queue_t *processes, FILE **file) {
+list_t *load_processes(list_t *processes, FILE **file) {
 
-    processes = create_empty_queue();
+    processes = create_empty_list();
 
     // adds process to linked list until EOF is reached
     while (enqueue(processes, read_process(file)));
@@ -110,4 +119,12 @@ int cmp_service_time(process_t *p1, process_t *p2) {
 
 void set_state(process_t *process, state_t state) {
     process->state = state;
+}
+
+void set_block(process_t *process, block_t *block) {
+    process->block = block;
+}
+
+block_t *get_block(process_t *process) {
+    return process->block;
 }

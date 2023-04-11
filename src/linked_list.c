@@ -9,62 +9,57 @@
 #include <assert.h>
 
 #include "linked_list.h"
-#include "process_data.h"
 
 
-struct node {
+struct list_node {
     void *data;
-    node_t *next;
+    list_node_t *next;
+    list_node_t *prev;
 };
 
-struct queue {
-    node_t *head;
-    node_t *tail;
+struct list {
+    list_node_t *head;
+    list_node_t *tail;
     int num_items;
 };
 
-queue_t *create_empty_queue() {
+list_t *create_empty_list() {
 
-    queue_t *queue;
-    queue = (queue_t *) malloc(sizeof(*queue));
-    assert(queue);
+    list_t *list;
+    list = (list_t *) malloc(sizeof(*list));
+    assert(list);
 
-    queue->head = NULL;
-    queue->tail = NULL;
-    queue->num_items = 0;
+    list->head = NULL;
+    list->tail = NULL;
+    list->num_items = 0;
 
-    return queue;
+    return list;
 
 }
 
 
-int enqueue(queue_t *queue, void *data) {
+int enqueue(list_t *list, void *data) {
 
     if (data == NULL) {
         return 0;
     }
 
-    node_t *new;
+    list_node_t *new = create_list_node(data, NULL, list->tail);
 
-    new = (node_t *) malloc(sizeof(*new));
-    assert(new);
-    new->data = data;
-    new->next = NULL;
-
-    if (queue->head == NULL) {
-        queue->head = new;
-        queue->tail = new;
-        (queue->num_items)++;
+    if (list->head == NULL) {
+        list->head = new;
+        list->tail = new;
+        (list->num_items)++;
         return 1;
     }
 
     // tail extended by 1
-    queue->tail->next = new;
+    list->tail->next = new;
 
     // new tail updated
-    queue->tail = new;
+    list->tail = new;
 
-    (queue->num_items)++;
+    (list->num_items)++;
 
 
 
@@ -72,26 +67,75 @@ int enqueue(queue_t *queue, void *data) {
     return 1;
 }
 
-void *dequeue(queue_t *queue) {
-    if (queue->head == NULL) {
+void *dequeue(list_t *list) {
+    if (list->head == NULL) {
         return NULL;
     }
-    node_t *head = queue->head;
-    queue->head = head->next;
-    if (queue->head == NULL) {
-        queue->tail = NULL;
+    list_node_t *head = list->head;
+    list->head = head->next;
+    if (list->head == NULL) {
+        list->tail = NULL;
     }
-    (queue->num_items)--;
+    (list->num_items)--;
 
 
     return head->data;
 }
 
-void free_list(queue_t *queue, void (*free_data)(void *)) {
+list_node_t *create_list_node(void *data, list_node_t *next, list_node_t *prev) {
 
-    node_t *curr, *prev;
+    list_node_t *new_node = (list_node_t *) malloc(sizeof(*new_node));
+    assert(new_node);
+    new_node->data = data;
+    new_node->next = next;
+    new_node->prev = prev;
 
-    curr = queue->head;
+    return new_node;
+}
+
+void insert_node_sorted(list_t *list, list_node_t *block_node, int (*compare)(void *, void *), void *(*get_sort_value)(void *)) {
+    // current and prev point to nodes for 'list' that store a node as data
+    list_node_t *head = list->head;
+    list_node_t *curr = head;
+    list_node_t *prev = NULL;
+    void *value = get_sort_value(get_data(block_node));
+
+    while (curr != NULL && (compare(get_sort_value(get_data(get_data(curr))), value) < 0)) { // curr->value < value (as soon as block size is smaller insert in that pos)
+        prev = curr;
+        curr = curr->next;
+    }
+
+    list_node_t *hole_node = create_list_node(block_node, curr, prev);
+
+    // dont really want to change 'node' values as I want to store 'node' as data for a node in list
+    if (is_empty_list(list)) {
+        list->head = hole_node;
+        list->tail = hole_node;
+    } else if (prev == NULL) {
+        // Insert at beginning (list doesn't have to be empty but item is the smallest so no prev)
+        //already done this (curr = head in this case)
+        //hole_node->next = head;
+        list->head = hole_node;
+        curr->prev = hole_node;
+    } else if (curr == NULL) {
+        // Insert at tail
+        list->tail = hole_node;
+        prev->next = hole_node;
+    } else {
+            // Insert between previous and current
+            prev->next = hole_node;
+            //already done this
+            //hole_node->next = curr;
+            curr->prev = hole_node;
+    }
+    list->num_items++;
+}
+
+void free_list(list_t *list, void (*free_data)(void *)) {
+
+    list_node_t *curr, *prev;
+
+    curr = list->head;
 
     while (curr != NULL) {
         prev = curr;
@@ -100,26 +144,104 @@ void free_list(queue_t *queue, void (*free_data)(void *)) {
         free(prev);
     }
 
-    free(queue);
+    free(list);
 }
 
-int is_empty_queue(queue_t *queue) {
-    return (queue->num_items == 0);
+void delete_node(list_t *list, list_node_t *node) {
+    if (list->head == NULL || list->tail == NULL || node == NULL) {
+        return;
+    }
+
+    if (list->head == node) {
+        // if nodes at head
+        list->head = node->next;
+    }
+
+    if (list->tail == node) {
+        // if nodes at tail
+        list->tail = node->prev;
+    }
+
+    if (node->next != NULL) {
+        // removing the link
+        node->next->prev = node->prev;
+    }
+
+    if (node->prev != NULL) {
+        node->prev->next = node->next;
+    }
+
+    list->num_items--;
+
+    // don't need to free as keeping the node still
+
 }
 
-node_t *get_head(queue_t *queue) {
-    return queue->head;
+void insert_list_node(list_t* list, void *data, list_node_t *prev, list_node_t *next) {
+    list_node_t *new = create_list_node(data, next, prev);
+
+    if (prev != NULL) {
+        prev->next = new;
+    } else {
+        list->tail = new;
+    }
+    if (next != NULL) {
+        next->prev = new;
+    } else {
+        list->head = new;
+    }
+
+    list->num_items++;
 }
 
-void *get_data(node_t *node) {
+int is_empty_list(list_t *list) {
+    return (list->num_items == 0);
+}
+
+list_node_t *get_head(list_t *list) {
+    return list->head;
+}
+
+list_node_t *get_tail(list_t *list) {
+    return list->tail;
+}
+
+void set_head(list_t *list, list_node_t *head) {
+    list->head = head;
+}
+
+void set_tail(list_t *list, list_node_t *tail) {
+    list->tail = tail;
+}
+
+void *get_data(list_node_t *node) {
     return node->data;
 }
 
-node_t *get_next(node_t *node) {
+list_node_t *get_next(list_node_t *node) {
     return node->next;
 }
 
-int get_queue_size(queue_t *queue) {
-    return queue->num_items;
+list_node_t *get_prev(list_node_t *node) {
+    return node->prev;
 }
 
+int get_num_items(list_t *list) {
+    return list->num_items;
+}
+
+void set_prev(list_node_t *node, list_node_t *prev) {
+    node->prev = prev;
+}
+
+void set_next(list_node_t *node, list_node_t *next) {
+    node->next = node;
+}
+
+void set_num_items(list_t *list, int num_items) {
+    list->num_items = num_items;
+}
+
+int get_list_size(list_t *list) {
+    return list->num_items;
+}

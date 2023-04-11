@@ -23,15 +23,15 @@ enum state {
 };
 
 void process_args(int argc, char **argv, char **scheduler, char **mem_strategy, int *quantum, FILE **file);
-void cycle(int quantum, queue_t *processes, char *scheduler, char *mem_strategy);
-void finish_process(process_t *process, queue_t *finished, int proc_remaining, int sim_time);
+void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy);
+void finish_process(process_t *process, list_t *finished, int proc_remaining, int sim_time, char *mem_strategy);
 process_t *run_next_process(void *ready, int sim_time, process_t *(*extract)(void *), int (*is_empty)(void *));
 
 int main(int argc, char *argv[]) {
     int quantum;
     char *scheduler = NULL, *mem_strategy = NULL;
     FILE *input_file = NULL;
-    queue_t *processes = NULL;
+    list_t *processes = NULL;
 
     // process command line arguments
     process_args(argc, argv, &scheduler, &mem_strategy, &quantum, &input_file);
@@ -84,16 +84,21 @@ void process_args(int argc, char **argv, char **scheduler, char **mem_strategy, 
 
 }
 
-void cycle(int quantum, queue_t *processes, char *scheduler, char *mem_strategy) {
+void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) {
     int sim_time = 0, num_cycles;
-    queue_t *input_queue = create_empty_queue(), *finished_queue = create_empty_queue();
+    list_t *input_queue = create_empty_list(), *finished_queue = create_empty_list();
     void *ready_queue;
-    int num_processes = get_queue_size(processes);
+    int num_processes = get_list_size(processes);
     process_t *current_process = NULL;
 
-    int processes_remaining = 0;
-    int run_new_process = 0;
+    int processes_remaining;
+    int run_new_process;
     int no_process_running = 0;
+    list_t *memory = create_empty_list();
+    list_t *holes = create_empty_list();
+    initialise_memory(memory, holes);
+
+
 
 
     for (num_cycles = 0; ; num_cycles++) {
@@ -105,7 +110,7 @@ void cycle(int quantum, queue_t *processes, char *scheduler, char *mem_strategy)
             if (num_cycles == 0) {
                 update_input(input_queue, processes, sim_time);
                 ready_queue = create_heap();
-                ready_queue = allocate_memory(input_queue, ready_queue, mem_strategy, (int (*)(void *, process_t *)) insert_process);
+                ready_queue = allocate_memory(memory, holes, input_queue, ready_queue, mem_strategy, sim_time, (int (*)(void *, process_t *)) insert_process);
                 current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) extract_min, (int (*)(void *)) is_empty_heap);
                 sim_time += quantum;
                 continue;
@@ -114,10 +119,10 @@ void cycle(int quantum, queue_t *processes, char *scheduler, char *mem_strategy)
             // updates service time of current process and finishes process if finished
             if ((run_new_process = update_time(quantum, current_process))) {
 
-                processes_remaining = get_queue_size(input_queue) + get_heap_size(ready_queue);
-                finish_process(current_process, finished_queue, processes_remaining, sim_time);
+                processes_remaining = get_list_size(input_queue) + get_heap_size(ready_queue);
+                finish_process(current_process, finished_queue, processes_remaining, sim_time, mem_strategy);
 
-                if (get_queue_size(finished_queue) == num_processes) {
+                if (get_list_size(finished_queue) == num_processes) {
                     break;
                 }
 
@@ -126,7 +131,7 @@ void cycle(int quantum, queue_t *processes, char *scheduler, char *mem_strategy)
             update_input(input_queue, processes, sim_time);
             // updates ready queue
 
-            ready_queue = allocate_memory(input_queue, ready_queue, mem_strategy, (int (*)(void *, process_t *)) insert_process);
+            ready_queue = allocate_memory(memory, holes, input_queue, ready_queue, mem_strategy, sim_time, (int (*)(void *, process_t *)) insert_process);
             // starts new process
             if (run_new_process || (!is_empty_heap(ready_queue) && no_process_running)) {
                 current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) extract_min, (int (*)(void *)) is_empty_heap);
@@ -140,9 +145,9 @@ void cycle(int quantum, queue_t *processes, char *scheduler, char *mem_strategy)
             // for first cycle
             if (num_cycles == 0) {
                 update_input(input_queue, processes, sim_time);
-                ready_queue = create_empty_queue();
-                ready_queue = allocate_memory(input_queue, ready_queue, mem_strategy,  (int (*)(void *, process_t *)) enqueue);
-                current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) dequeue, (int (*)(void *)) is_empty_queue);
+                ready_queue = create_empty_list();
+                ready_queue = allocate_memory(memory, holes, input_queue, ready_queue, mem_strategy, sim_time, (int (*)(void *, process_t *)) enqueue);
+                current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) dequeue, (int (*)(void *)) is_empty_list);
                 sim_time += quantum;
                 continue;
             }
@@ -150,11 +155,11 @@ void cycle(int quantum, queue_t *processes, char *scheduler, char *mem_strategy)
             // updates service time of current process and finishes process if finished
             if ((run_new_process = update_time(quantum, current_process))) {
 
-                processes_remaining = get_queue_size(input_queue) + get_queue_size(ready_queue);
+                processes_remaining = get_list_size(input_queue) + get_list_size(ready_queue);
 
-                finish_process(current_process, finished_queue, processes_remaining, sim_time);
+                finish_process(current_process, finished_queue, processes_remaining, sim_time, mem_strategy);
 
-                if (get_queue_size(finished_queue) == num_processes) {
+                if (get_list_size(finished_queue) == num_processes) {
                     break;
                 }
 
@@ -163,14 +168,14 @@ void cycle(int quantum, queue_t *processes, char *scheduler, char *mem_strategy)
             // updates input queue
             update_input(input_queue, processes, sim_time);
             // updates ready queue
-            ready_queue = allocate_memory(input_queue, ready_queue, mem_strategy, (int (*)(void *, process_t *)) enqueue);
+            ready_queue = allocate_memory(memory, holes, input_queue, ready_queue, mem_strategy, sim_time, (int (*)(void *, process_t *)) enqueue);
 
             // suspend processes and decide which to run
             if (run_new_process) {
-                current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) dequeue, (int (*)(void *)) is_empty_queue);
-            } else if (!is_empty_queue(ready_queue)) {
+                current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) dequeue, (int (*)(void *)) is_empty_list);
+            } else if (!is_empty_list(ready_queue)) {
                 enqueue(ready_queue, current_process);
-                current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) dequeue, (int (*)(void *)) is_empty_queue);
+                current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) dequeue, (int (*)(void *)) is_empty_list);
 
             }
 
@@ -184,10 +189,11 @@ void cycle(int quantum, queue_t *processes, char *scheduler, char *mem_strategy)
 
 }
 
-void finish_process(process_t *process, queue_t *finished, int proc_remaining, int sim_time) {
+void finish_process(process_t *process, list_t *finished, int proc_remaining, int sim_time, char *mem_strategy) {
     set_state(process, FINISHED);
     enqueue(finished, process);
     printf("%d,FINISHED,process_name=%s,proc_remaining=%d\n", sim_time, get_name(process), proc_remaining);
+    deallocate_memory(process, mem_strategy);
 }
 
 
