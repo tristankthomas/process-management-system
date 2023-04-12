@@ -43,11 +43,17 @@ void *allocate_memory(list_t *memory, list_t *holes, list_t *input, void *ready,
 
     } else if (strcmp(mem_strategy, "best-fit") == 0) {
 
-        while ((process = dequeue(input)) != NULL) {
+        list_node_t *curr = get_head(input);
+
+        while (curr != NULL) {
+            process = (process_t *) get_data(curr);
 
             if (best_fit(holes, memory, process)) {
                 process_ready(process, ready, sim_time, mem_strategy, insert);
+                dequeue(input);
             }
+
+            curr = get_next(curr);
         }
 
 
@@ -125,13 +131,13 @@ void deallocate_memory(process_t *process, list_t *memory, list_t *holes, char *
 
         // check to right
         if (get_next(block_node) != NULL) {
-            check_direction(memory, block_node, get_next);
+            check_direction(memory, holes, block_node, get_next);
         }
 
 
         // check to left
         if (get_prev(block_node) != NULL) {
-            check_direction(memory, block_node, get_prev);
+            check_direction(memory, holes, block_node, get_prev);
         }
         // need to delete holes from holes list when updating memory
         insert_node_sorted(holes, block_node, (int (*)(void *, void *)) compare_sizes, (void *(*)(void *)) get_size);
@@ -142,13 +148,13 @@ void deallocate_memory(process_t *process, list_t *memory, list_t *holes, char *
 
 }
 
-void check_direction(list_t *memory, list_node_t *block_node, list_node_t *(*get_dir)(list_node_t *)) {
+void check_direction(list_t *memory, list_t *holes, list_node_t *block_node, list_node_t *(*get_dir)(list_node_t *)) {
 
     list_node_t *curr = get_dir(block_node);
     block_t *curr_block = (block_t *) get_data(curr);
 
     while (curr_block->type == HOLE) {
-        update_memory(memory, block_node, curr);
+        update_memory(memory, holes, block_node, curr);
         curr = get_dir(curr);
         if (curr == NULL) {
             break;
@@ -157,18 +163,18 @@ void check_direction(list_t *memory, list_node_t *block_node, list_node_t *(*get
     }
 }
 
-void update_memory(list_t *memory, list_node_t *main_node, list_node_t *adj_node) {
+void update_memory(list_t *memory, list_t *holes, list_node_t *main_node, list_node_t *adj_node) {
     block_t *adj_block = (block_t *) get_data(adj_node);
     block_t *main_block = (block_t *) get_data(main_node);
     int adj_start_address = adj_block->start_address;
     int main_start_address = main_block->start_address;
-
+    // delete the adjacent node from holes too - do this by searching through holes and finding block address that matches adj_block and then delete and free this (ie delete node based on data)
     main_block->start_address = (adj_start_address < main_start_address) ? adj_start_address : main_start_address;
     main_block->size += adj_block->size;
     delete_node(memory, adj_node);
+    delete_node_by_data(holes, adj_node);
     // maybe free later
 }
-
 
 
 

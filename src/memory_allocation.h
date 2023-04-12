@@ -31,7 +31,7 @@ void split(process_t *process, list_node_t *node, list_t *holes, list_t *memory)
 int *get_size(block_t *block);
 int compare_sizes(int *size1, int *size2);
 void process_ready(process_t *process, void *ready, int sim_time, char *mem_strategy, int (*insert)(void *, process_t *));
-void update_memory(list_t *memory, list_node_t *main_node, list_node_t *adj_node);
-void check_direction(list_t *memory, list_node_t *block_node, list_node_t *(*get_dir)(list_node_t *));
+void update_memory(list_t *memory, list_t *holes, list_node_t *main_node, list_node_t *adj_node);
+void check_direction(list_t *memory, list_t *holes, list_node_t *block_node, list_node_t *(*get_dir)(list_node_t *));
 
 #endif

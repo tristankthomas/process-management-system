@@ -177,6 +177,18 @@ void delete_node(list_t *list, list_node_t *node) {
 
 }
 
+void delete_node_by_data(list_t *list, void *data) {
+    list_node_t *curr = get_head(list);
+
+    while (get_data(curr) != data) {
+
+        curr = get_next(curr);
+
+    }
+    delete_node(list, curr);
+    //free()
+}
+
 list_node_t *insert_list_node(list_t* list, void *data, list_node_t *prev, list_node_t *next) {
     list_node_t *new = create_list_node(data, next, prev);
 
