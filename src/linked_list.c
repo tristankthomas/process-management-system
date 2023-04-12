@@ -11,15 +11,15 @@
 #include "linked_list.h"
 
 
-struct list_node {
+struct node {
     void *data;
-    list_node_t *next;
-    list_node_t *prev;
+    node_t *next;
+    node_t *prev;
 };
 
 struct list {
-    list_node_t *head;
-    list_node_t *tail;
+    node_t *head;
+    node_t *tail;
     int num_items;
 };
 
@@ -37,14 +37,19 @@ list_t *create_empty_list() {
 
 }
 
-
+/**
+ *
+ * @param list
+ * @param data
+ * @return
+ */
 int enqueue(list_t *list, void *data) {
 
     if (data == NULL) {
         return 0;
     }
 
-    list_node_t *new = create_list_node(data, NULL, list->tail);
+    node_t *new = create_node(data, NULL, list->tail);
 
     if (list->head == NULL) {
         list->head = new;
@@ -59,7 +64,7 @@ int enqueue(list_t *list, void *data) {
     // new tail updated
     list->tail = new;
 
-    (list->num_items)++;
+    list->num_items++;
 
 
 
@@ -67,24 +72,32 @@ int enqueue(list_t *list, void *data) {
     return 1;
 }
 
+/**
+ *
+ * @param list
+ * @return
+ */
 void *dequeue(list_t *list) {
     if (list->head == NULL) {
         return NULL;
     }
-    list_node_t *head = list->head;
+    node_t *head = list->head;
     list->head = head->next;
     if (list->head == NULL) {
         list->tail = NULL;
     }
-    (list->num_items)--;
+    list->num_items--;
+    void *data = head->data;
 
+    free(head);
+    head = NULL;
 
-    return head->data;
+    return data;
 }
 
-list_node_t *create_list_node(void *data, list_node_t *next, list_node_t *prev) {
+node_t *create_node(void *data, node_t *next, node_t *prev) {
 
-    list_node_t *new_node = (list_node_t *) malloc(sizeof(*new_node));
+    node_t *new_node = (node_t *) malloc(sizeof(*new_node));
     assert(new_node);
     new_node->data = data;
     new_node->next = next;
@@ -93,11 +106,11 @@ list_node_t *create_list_node(void *data, list_node_t *next, list_node_t *prev) 
     return new_node;
 }
 
-void insert_node_sorted(list_t *list, list_node_t *block_node, int (*compare)(void *, void *), void *(*get_sort_value)(void *)) {
+void insert_node_sorted(list_t *list, node_t *block_node, int (*compare)(void *, void *), void *(*get_sort_value)(void *)) {
     // current and prev point to nodes for 'list' that store a node as data
-    list_node_t *head = list->head;
-    list_node_t *curr = head;
-    list_node_t *prev = NULL;
+    node_t *head = list->head;
+    node_t *curr = head;
+    node_t *prev = NULL;
     void *value = get_sort_value(get_data(block_node));
 
     while (curr != NULL && (compare(get_sort_value(get_data(get_data(curr))), value) < 0)) { // curr->value < value (as soon as block size is smaller insert in that pos)
@@ -105,9 +118,9 @@ void insert_node_sorted(list_t *list, list_node_t *block_node, int (*compare)(vo
         curr = curr->next;
     }
 
-    list_node_t *hole_node = create_list_node(block_node, curr, prev);
+    node_t *hole_node = create_node(block_node, curr, prev);
 
-    // dont really want to change 'node' values as I want to store 'node' as data for a node in list
+    // don't really want to change 'node' values as I want to store 'node' as data for a node in list
     if (is_empty_list(list)) {
         list->head = hole_node;
         list->tail = hole_node;
@@ -122,18 +135,18 @@ void insert_node_sorted(list_t *list, list_node_t *block_node, int (*compare)(vo
         list->tail = hole_node;
         prev->next = hole_node;
     } else {
-            // Insert between previous and current
-            prev->next = hole_node;
-            //already done this
-            //hole_node->next = curr;
-            curr->prev = hole_node;
+        // Insert between previous and current
+        prev->next = hole_node;
+        //already done this
+        //hole_node->next = curr;
+        curr->prev = hole_node;
     }
     list->num_items++;
 }
 
 void free_list(list_t *list, void (*free_data)(void *)) {
 
-    list_node_t *curr, *prev;
+    node_t *curr, *prev;
 
     curr = list->head;
 
@@ -141,13 +154,16 @@ void free_list(list_t *list, void (*free_data)(void *)) {
         prev = curr;
         curr = curr->next;
         free_data(prev->data);
+        prev->data = NULL;
         free(prev);
+        prev = NULL;
     }
 
     free(list);
+    list = NULL;
 }
 
-void delete_node(list_t *list, list_node_t *node) {
+void delete_node(list_t *list, node_t *node) {
     if (list->head == NULL || list->tail == NULL || node == NULL) {
         return;
     }
@@ -177,8 +193,12 @@ void delete_node(list_t *list, list_node_t *node) {
 
 }
 
-void delete_node_by_data(list_t *list, void *data) {
-    list_node_t *curr = get_head(list);
+void blank(void *blank) {
+    return;
+}
+
+void delete_node_by_data(list_t *list, void *data, void (*free_data)(void *)) {
+    node_t *curr = get_head(list);
 
     while (get_data(curr) != data) {
 
@@ -186,11 +206,19 @@ void delete_node_by_data(list_t *list, void *data) {
 
     }
     delete_node(list, curr);
-    //free()
+    free_node(get_data(curr), free_data);
+    free(curr);
+    curr = NULL;
 }
 
-list_node_t *insert_list_node(list_t* list, void *data, list_node_t *prev, list_node_t *next) {
-    list_node_t *new = create_list_node(data, next, prev);
+void free_node(node_t *node, void (*free_data)(void *)) {
+    free_data(node->data);
+    free(node);
+    node = NULL;
+}
+
+node_t *insert_node(list_t* list, void *data, node_t *prev, node_t *next) {
+    node_t *new = create_node(data, next, prev);
 
     if (prev != NULL) {
         prev->next = new;
@@ -212,31 +240,31 @@ int is_empty_list(list_t *list) {
     return (list->num_items == 0);
 }
 
-list_node_t *get_head(list_t *list) {
+node_t *get_head(list_t *list) {
     return list->head;
 }
 
-list_node_t *get_tail(list_t *list) {
+node_t *get_tail(list_t *list) {
     return list->tail;
 }
 
-void set_head(list_t *list, list_node_t *head) {
+void set_head(list_t *list, node_t *head) {
     list->head = head;
 }
 
-void set_tail(list_t *list, list_node_t *tail) {
+void set_tail(list_t *list, node_t *tail) {
     list->tail = tail;
 }
 
-void *get_data(list_node_t *node) {
+void *get_data(node_t *node) {
     return node->data;
 }
 
-list_node_t *get_next(list_node_t *node) {
+node_t *get_next(node_t *node) {
     return node->next;
 }
 
-list_node_t *get_prev(list_node_t *node) {
+node_t *get_prev(node_t *node) {
     return node->prev;
 }
 
@@ -244,11 +272,11 @@ int get_num_items(list_t *list) {
     return list->num_items;
 }
 
-void set_prev(list_node_t *node, list_node_t *prev) {
+void set_prev(node_t *node, node_t *prev) {
     node->prev = prev;
 }
 
-void set_next(list_node_t *node, list_node_t *next) {
+void set_next(node_t *node, node_t *next) {
     node->next = node;
 }
 

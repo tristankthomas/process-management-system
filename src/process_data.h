@@ -19,7 +19,7 @@ typedef enum state state_t;
 typedef struct process process_t;
 typedef struct node node_t;
 typedef struct list list_t;
-typedef struct list_node list_node_t;
+typedef struct node node_t;
 typedef struct block block_t;
 
 
@@ -32,8 +32,8 @@ int cmp_service_time(process_t *p1, process_t *p2);
 void set_state(process_t *process, state_t state);
 void set_value(process_t *process, int value, char field);
 char *get_name(process_t *process);
-void set_block_node(process_t *process, list_node_t *block_node);
-list_node_t *get_block_node(process_t *process);
+void set_block_node(process_t *process, node_t *block_node);
+node_t *get_block_node(process_t *process);
 void update_stats(process_t *process);
 int update_time(int quantum, process_t *process);
 

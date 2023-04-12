@@ -17,7 +17,7 @@ typedef enum state state_t;
 typedef struct block block_t;
 typedef enum block_type block_type_t;
 typedef struct list list_t;
-typedef struct list_node list_node_t;
+typedef struct node node_t;
 typedef struct process process_t;
 
 
@@ -27,11 +27,11 @@ void deallocate_memory(process_t *process, list_t *memory, list_t *holes, char *
 void initialise_memory(list_t *memory, list_t *holes);
 block_t *create_block(block_type_t type, int start, int size);
 int best_fit(list_t *holes, list_t *memory, process_t *process);
-void split(process_t *process, list_node_t *node, list_t *holes, list_t *memory);
+void split(process_t *process, node_t *node, list_t *holes, list_t *memory);
 int *get_size(block_t *block);
 int compare_sizes(int *size1, int *size2);
 void process_ready(process_t *process, void *ready, int sim_time, char *mem_strategy, int (*insert)(void *, process_t *));
-void update_memory(list_t *memory, list_t *holes, list_node_t *main_node, list_node_t *adj_node);
-void check_direction(list_t *memory, list_t *holes, list_node_t *block_node, list_node_t *(*get_dir)(list_node_t *));
+void update_memory(list_t *memory, list_t *holes, node_t *main_node, node_t *adj_node);
+void check_direction(list_t *memory, list_t *holes, node_t *block_node, node_t *(*get_dir)(node_t *));
 
 #endif

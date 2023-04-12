@@ -11,7 +11,7 @@
 
 #include "process_data.h"
 #include "linked_list.h"
-#include "memory_allocation.h"
+
 
 enum state {
     IDLE, READY, RUNNING, FINISHED
@@ -26,7 +26,7 @@ struct process {
     double overhead;
     char* name;
     state_t state;
-    list_node_t *block_node;
+    node_t *block_node;
 
 };
 
@@ -50,6 +50,7 @@ process_t *read_process(FILE **file) {
         process->arrival_time = time_arrived;
         process->name = strdup(name);
     } else {
+        free(process);
         process = NULL;
     }
 
@@ -71,7 +72,9 @@ list_t *load_processes(list_t *processes, FILE **file) {
 void free_process(process_t *process) {
 
     free(process->name);
+    process->name = NULL;
     free(process);
+    process = NULL;
 }
 
 
@@ -167,10 +170,10 @@ void set_state(process_t *process, state_t state) {
     process->state = state;
 }
 
-void set_block_node(process_t *process, list_node_t *block_node) {
+void set_block_node(process_t *process, node_t *block_node) {
     process->block_node = block_node;
 }
 
-list_node_t *get_block_node(process_t *process) {
+node_t *get_block_node(process_t *process) {
     return process->block_node;
 }

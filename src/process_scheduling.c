@@ -20,11 +20,14 @@ list_t *update_input(list_t *input, list_t *processes, int sim_time) {
     if (get_head(processes) == NULL) {
         return NULL;
     }
-    while((int) get_value(get_data(get_head(processes)), 'a') <= sim_time) {
+    while ((int) get_value(get_data(get_head(processes)), 'a') <= sim_time) {
+
         enqueue(input, dequeue(processes));
+
         if (is_empty_list(processes)) {
             break;
         }
+
     }
 
     return input;

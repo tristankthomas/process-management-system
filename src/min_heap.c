@@ -11,6 +11,7 @@
 #include "min_heap.h"
 #include "process_data.h"
 
+
 struct min_heap {
     process_t **processes;
     int num_items;
@@ -22,6 +23,7 @@ min_heap_t *create_heap() {
 
     heap = (min_heap_t *) malloc(sizeof(*heap));
     heap->processes = (process_t **) malloc(INIT_SIZE * sizeof(*heap->processes));
+    assert(heap->processes);
     heap->num_items = 0;
     heap->capacity = INIT_SIZE;
 
@@ -33,6 +35,7 @@ void insert_process(min_heap_t *heap, process_t *process) {
     if (heap->num_items >= heap->capacity) {
         heap->capacity *= 2;
         heap->processes = (process_t **) realloc(heap->processes, heap->capacity * sizeof(process));
+        assert(heap->processes);
 
     }
     heap->processes[heap->num_items++] = process;
@@ -105,7 +108,9 @@ void swap(process_t **p1, process_t **p2) {
 
 void free_heap(min_heap_t *heap) {
     free(heap->processes);
+    heap->processes = NULL;
     free(heap);
+    heap = NULL;
 }
 
 int get_heap_size(min_heap_t *heap) {

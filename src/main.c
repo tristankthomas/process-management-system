@@ -19,6 +19,7 @@
 
 #define NUM_ARGS 9
 
+
 enum state {
     IDLE, READY, RUNNING, FINISHED
 };
@@ -30,6 +31,7 @@ process_t *run_next_process(void *ready, int sim_time, process_t *(*extract)(voi
 void print_statistics(list_t *finished, int makespan);
 double mean(list_t *list, char field);
 double max(list_t *list, char field);
+
 
 int main(int argc, char *argv[]) {
     int quantum;
@@ -49,12 +51,15 @@ int main(int argc, char *argv[]) {
     free(scheduler);
     scheduler = NULL;
     free(mem_strategy);
+    mem_strategy = NULL;
     free_list(processes, (void (*)(void *)) free_process);
 
     fclose(input_file);
+    input_file = NULL;
 
     return 0;
 }
+
 
 void process_args(int argc, char **argv, char **scheduler, char **mem_strategy, int *quantum, FILE **file) {
     // check correct amount of arguments
@@ -191,6 +196,16 @@ void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) 
 
     print_statistics(finished_queue, sim_time);
 
+    free_list(finished_queue, (void (*)(void *)) free_process);
+    free_list(input_queue, (void (*)(void *)) free_process);
+    free_list(memory, (void (*)(void *)) free);
+    free_list(holes, blank);
+
+    if (strcmp(scheduler, "RR") == 0) {
+        free_list(ready_queue, (void (*)(void *)) free_process);
+    } else if (strcmp(scheduler, "SJF") == 0) {
+        free_heap(ready_queue);
+    }
 
 }
 
@@ -232,7 +247,7 @@ void print_statistics(list_t *finished, int makespan) {
 double mean(list_t *list, char field) {
 
     double sum = 0;
-    list_node_t *curr = get_head(list);
+    node_t *curr = get_head(list);
     process_t *curr_proc;
     while (curr != NULL) {
 
@@ -248,7 +263,7 @@ double mean(list_t *list, char field) {
 
 double max(list_t *list, char field) {
 
-    list_node_t *curr = get_head(list);
+    node_t *curr = get_head(list);
     process_t *curr_proc = (process_t *) get_data(curr);;
     double max = get_value(curr_proc, field);
 
