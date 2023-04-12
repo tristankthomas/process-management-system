@@ -9,6 +9,7 @@
 #include <string.h>
 #include <assert.h>
 #include <unistd.h>
+#include <math.h>
 
 #include "process_data.h"
 #include "process_scheduling.h"
@@ -26,6 +27,9 @@ void process_args(int argc, char **argv, char **scheduler, char **mem_strategy, 
 void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy);
 void finish_process(process_t *process, list_t *finished, list_t *memory, list_t *holes, int proc_remaining, int sim_time, char *mem_strategy);
 process_t *run_next_process(void *ready, int sim_time, process_t *(*extract)(void *), int (*is_empty)(void *));
+void print_statistics(list_t *finished, int makespan);
+double mean(list_t *list, char field);
+double max(list_t *list, char field);
 
 int main(int argc, char *argv[]) {
     int quantum;
@@ -97,8 +101,6 @@ void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) 
     list_t *memory = create_empty_list();
     list_t *holes = create_empty_list();
     initialise_memory(memory, holes);
-
-
 
 
     for (num_cycles = 0; ; num_cycles++) {
@@ -187,12 +189,17 @@ void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) 
         sim_time += quantum;
     }
 
+    print_statistics(finished_queue, sim_time);
+
+
 }
 
 void finish_process(process_t *process, list_t *finished, list_t *memory, list_t *holes, int proc_remaining, int sim_time, char *mem_strategy) {
     set_state(process, FINISHED);
     enqueue(finished, process);
     printf("%d,FINISHED,process_name=%s,proc_remaining=%d\n", sim_time, get_name(process), proc_remaining);
+    set_value(process, sim_time, 'f');
+    update_stats(process);
     deallocate_memory(process, memory, holes, mem_strategy);
 }
 
@@ -205,8 +212,59 @@ process_t *run_next_process(void *ready, int sim_time, process_t *(*extract)(voi
     process_t *current_process = extract(ready);
 
     set_state(current_process, RUNNING);
-    printf("%d,RUNNING,process_name=%s,remaining_time=%d\n", sim_time, get_name(current_process), get_value(current_process, 's'));
+    printf("%d,RUNNING,process_name=%s,remaining_time=%d\n", sim_time, get_name(current_process), (int) get_value(current_process, 'l'));
     return current_process;
+}
+
+void print_statistics(list_t *finished, int makespan) {
+    int avg_turnaround;
+    double avg_overhead, max_overhead;
+    avg_turnaround = ceil(mean(finished, 't'));
+    // rounded to remove effects of floating point arithmetic
+    avg_overhead = round(mean(finished, 'o') * 100) / 100;
+    max_overhead = round(max(finished, 'o') * 100) / 100;
+
+    printf("Turnaround time %d\n", avg_turnaround);
+    printf("Time overhead %.2lf %.2lf\n", max_overhead, avg_overhead);
+    printf("Makespan %d\n", makespan);
+}
+
+double mean(list_t *list, char field) {
+
+    double sum = 0;
+    list_node_t *curr = get_head(list);
+    process_t *curr_proc;
+    while (curr != NULL) {
+
+        curr_proc = (process_t *) get_data(curr);
+        sum += get_value(curr_proc, field);
+
+        curr = get_next(curr);
+    }
+
+    return (double) sum / get_num_items(list);
+
+}
+
+double max(list_t *list, char field) {
+
+    list_node_t *curr = get_head(list);
+    process_t *curr_proc = (process_t *) get_data(curr);;
+    double max = get_value(curr_proc, field);
+
+    while (curr != NULL) {
+
+        curr_proc = (process_t *) get_data(curr);
+        if (get_value(curr_proc, field) > max) {
+            max = get_value(curr_proc, field);
+        }
+
+        curr = get_next(curr);
+
+    }
+
+    return max;
+
 }
 
 

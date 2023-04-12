@@ -72,7 +72,7 @@ int best_fit(list_t *holes, list_t *memory, process_t *process) {
     while ((is_space = (curr != NULL))) {
         block_t *curr_block = (block_t *) get_data(get_data(curr));
         // keep iterating until block is bigger than or equal to what is needed (will be best-fit since sorted from smallest to largest)
-        if (curr_block->size >= get_value(process, 'm')) {
+        if (curr_block->size >= (int) get_value(process, 'm')) {
             best_fit = curr;
             break;
         }
@@ -95,7 +95,7 @@ void split(process_t *process, list_node_t *node, list_t *holes, list_t *memory)
     block_t *old_block = (block_t *) get_data(node);
 
     int prev_size = old_block->size;
-    int new_size = get_value(process, 'm');
+    int new_size = (int) get_value(process, 'm');
     int start_address = old_block->start_address;
     // block stored in new node
     block_t *new_block = create_block(PROCESS, start_address, new_size);

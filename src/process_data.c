@@ -22,10 +22,12 @@ enum block_type {
 };
 
 struct process {
-    int arrival_time, service_time, mem_requirement;
+    int arrival_time, service_time, service_time_left, mem_requirement, finish_time, turnaround_time;
+    double overhead;
     char* name;
     state_t state;
     list_node_t *block_node;
+
 };
 
 
@@ -39,16 +41,18 @@ process_t *read_process(FILE **file) {
 
     char name[MAX_NAME_LEN] = "";
     int service_time = 0, time_arrived = 0, mem_requirement = 0;
+
     if (fscanf(*file, "%d %s %d %d", &time_arrived, name, &service_time, &mem_requirement) != EOF) {
         process->state = IDLE;
         process->mem_requirement = mem_requirement;
         process->service_time = service_time;
+        process->service_time_left = service_time;
         process->arrival_time = time_arrived;
         process->name = strdup(name);
     } else {
         process = NULL;
     }
-    //process->block = NULL;
+
 
     return process;
 
@@ -71,17 +75,47 @@ void free_process(process_t *process) {
 }
 
 
-int get_value(process_t *process, char field) {
+double get_value(process_t *process, char field) {
     switch (field) {
         case 'a':
             return process->arrival_time;
         case 's':
             return process->service_time;
+        case 'l':
+            return process->service_time_left;
         case 'm':
             return process->mem_requirement;
+        case 'f':
+            return process->finish_time;
+        case 't':
+            return process->turnaround_time;
+        case 'o':
+            return process->overhead;
         default:
             exit(EXIT_FAILURE);
     }
+}
+
+
+void update_stats(process_t *process) {
+    process->turnaround_time = process->finish_time - process->arrival_time;
+    process->overhead = (double) process->turnaround_time / process->service_time;
+}
+
+int update_time(int quantum, process_t *process) {
+    if (process == NULL) {
+        return 0;
+    }
+
+    if (process->service_time_left - quantum <= 0) {
+        process->service_time_left = 0;
+        process->state = FINISHED;
+        return 1;
+    } else {
+        process->service_time_left -= quantum;
+        return 0;
+    }
+
 }
 
 char *get_name(process_t *process) {
@@ -96,8 +130,20 @@ void set_value(process_t *process, int value, char field) {
         case 's':
             process->service_time = value;
             break;
+        case 'l':
+            process->service_time_left = value;
+            break;
         case 'm':
             process->mem_requirement = value;
+            break;
+        case 'f':
+            process->finish_time = value;
+            break;
+        case 't':
+            process->turnaround_time = value;
+            break;
+        case 'o':
+            process->overhead = value;
             break;
         default:
             exit(EXIT_FAILURE);

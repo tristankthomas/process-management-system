@@ -11,7 +11,6 @@
 #include "linked_list.h"
 
 list_t *update_input(list_t *input, list_t *processes, int sim_time);
-int update_time(int quantum, process_t *process);
 // function for shortest job first
 
 // function for round robin

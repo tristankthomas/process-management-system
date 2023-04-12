@@ -1,12 +1,13 @@
 
 CC = gcc
 CFLAGS = -Wall -g
+LDFLAGS = -lm
 EXE = allocate
 OBJ = process_data.o process_scheduling.o memory_allocation.o linked_list.o min_heap.o
 
 # linking object files to executable
 $(EXE): src/main.c $(OBJ)
-	$(CC) $(CFLAGS) -o $(EXE) $(OBJ) $<
+	$(CC) $(CFLAGS) -o $(EXE) $(OBJ) $< $(LDFLAGS)
 
 # compiling all object files
 %.o: src/%.c src/%.h
