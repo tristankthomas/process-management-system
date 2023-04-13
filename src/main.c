@@ -20,8 +20,6 @@
 #include "min_heap.h"
 
 #define NUM_ARGS 9
-#define IN 0
-#define OUT 1
 #define READ 0
 #define WRITE 1
 #define IMPLEMENTS_REAL_PROCESS
@@ -33,12 +31,14 @@ enum state {
 
 void process_args(int argc, char **argv, char **scheduler, char **mem_strategy, int *quantum, FILE **file);
 void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy);
-void finish_process(process_t *process, list_t *finished, list_t *memory, list_t *holes, int proc_remaining, int sim_time, char *mem_strategy, int fd_in[2], int fd_out[2]);
-process_t *run_next_process(void *ready, int sim_time, process_t *(*extract)(void *), int (*is_empty)(void *), int fd_in[2], int fd_out[2]);
+void finish_process(process_t *process, list_t *finished, list_t *memory, list_t *holes, int proc_remaining, int sim_time, char *mem_strategy, int fd_in[], int fd_out[]);
+process_t *run_next_process(void *ready, int sim_time, process_t *(*extract)(void *), int (*is_empty)(void *), int fd_in[], int fd_out[]);
 void print_statistics(list_t *finished, int makespan);
 double mean(list_t *list, char field);
 double max(list_t *list, char field);
-void run_real_process(process_t *process, int fd_in[2], int fd_out[2], int sim_time);
+void run_real_process(process_t *process, int fd_in[], int fd_out[], int sim_time);
+uint8_t send_bytes(int num, int fd_out[]);
+void read_and_verify(uint8_t test_byte, int fd_in[]);
 
 
 int main(int argc, char *argv[]) {
@@ -138,7 +138,7 @@ void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) 
 
                 processes_remaining = get_list_size(input_queue) + get_heap_size(ready_queue);
                 finish_process(current_process, finished_queue, memory, holes, processes_remaining, sim_time, mem_strategy, fd_in, fd_out);
-
+                no_process_running = 1;
                 if (get_list_size(finished_queue) == num_processes) {
                     break;
                 }
@@ -148,21 +148,9 @@ void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) 
             update_input(input_queue, processes, sim_time);
             // updates ready queue
             if (!no_process_running) {
-                uint8_t time_bytes[4];
-                *(uint32_t *) time_bytes = (uint32_t) sim_time;
-                // big endian (MSB in lowest mem address)
-                for (int i = 3; i >= 0; i--) {
-                    if (write(fd_out[WRITE], &time_bytes[i], 1) != 1) {
-                        perror("write");
-                        exit(EXIT_FAILURE);
-                    }
-                }
+                uint8_t test_byte = send_bytes(sim_time, fd_out);
                 kill(get_value(current_process, 'p'), SIGCONT);
-                char buf[1];
-                if (read(fd_in[READ], buf, 1) != 1) {
-                    perror("read");
-                    exit(EXIT_FAILURE);
-                }
+                read_and_verify(test_byte, fd_in);
 
             }
             ready_queue = allocate_memory(memory, holes, input_queue, ready_queue, mem_strategy, sim_time, (int (*)(void *, process_t *)) insert_process);
@@ -238,19 +226,15 @@ void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) 
 
 
 
-void finish_process(process_t *process, list_t *finished, list_t *memory, list_t *holes, int proc_remaining, int sim_time, char *mem_strategy, int fd_in[2], int fd_out[2]) {
+void finish_process(process_t *process, list_t *finished, list_t *memory, list_t *holes, int proc_remaining, int sim_time, char *mem_strategy, int fd_in[], int fd_out[]) {
     char sha256[64];
 
     set_state(process, FINISHED);
     enqueue(finished, process);
     printf("%d,FINISHED,process_name=%s,proc_remaining=%d\n", sim_time, get_name(process), proc_remaining);
-    // terminate
-    uint8_t time_bytes[4];
-    *(uint32_t *) time_bytes = (uint32_t) sim_time;
 
-    for (int i = 3; i >= 0; i--) {
-        write(fd_out[WRITE], &time_bytes[i], 1);
-    }
+    // terminate
+    send_bytes(sim_time, fd_out);
     kill(get_value(process, 'p'), SIGTERM);
     read(fd_in[READ], sha256, 64);
 
@@ -258,7 +242,6 @@ void finish_process(process_t *process, list_t *finished, list_t *memory, list_t
     for (int i = 0; i < 64; i++) {
         printf("%c", sha256[i]);
     }
-
     printf("\n");
 
     set_value(process, sim_time, 'f');
@@ -268,7 +251,7 @@ void finish_process(process_t *process, list_t *finished, list_t *memory, list_t
 
 
 
-process_t *run_next_process(void *ready, int sim_time, process_t *(*extract)(void *), int (*is_empty)(void *), int fd_in[2], int fd_out[2]) {
+process_t *run_next_process(void *ready, int sim_time, process_t *(*extract)(void *), int (*is_empty)(void *), int fd_in[], int fd_out[]) {
 
     if (is_empty(ready)) {
         return NULL;
@@ -281,7 +264,7 @@ process_t *run_next_process(void *ready, int sim_time, process_t *(*extract)(voi
     return current_process;
 }
 
-void run_real_process(process_t *process, int fd_in[2], int fd_out[2], int sim_time) {
+void run_real_process(process_t *process, int fd_in[], int fd_out[], int sim_time) {
 
     pid_t child_pid;
 
@@ -302,7 +285,7 @@ void run_real_process(process_t *process, int fd_in[2], int fd_out[2], int sim_t
         dup2(fd_out[READ], STDIN_FILENO);
         dup2(fd_in[WRITE], STDOUT_FILENO);
 
-        char *args[] = {"process", get_name(process), "-v", NULL};
+        char *args[] = {"process", get_name(process), NULL};
         // replace the child process with process program
         execv(args[0], args);
         exit(0);
@@ -313,25 +296,9 @@ void run_real_process(process_t *process, int fd_in[2], int fd_out[2], int sim_t
         close(fd_in[WRITE]); // close write
 
         // create
-        uint8_t time_bytes[4];
-        *(uint32_t *) time_bytes = (uint32_t) sim_time;
-        // big endian (MSB in lowest mem address)
-        for (int i = 3; i >= 0; i--) {
-            if (write(fd_out[WRITE], &time_bytes[i], 1) != 1) {
-                perror("write");
-                exit(EXIT_FAILURE);
-            }
-        }
+        uint8_t test_byte = send_bytes(sim_time, fd_out);
+        read_and_verify(test_byte, fd_in);
 
-        char buf[1];
-        if (read(fd_in[READ], buf, 1) != 1) {
-            perror("read");
-            exit(EXIT_FAILURE);
-        }
-
-        if (buf[0] != time_bytes[0]) {
-            exit(EXIT_FAILURE);
-        }
 
     }
 
@@ -340,9 +307,35 @@ void run_real_process(process_t *process, int fd_in[2], int fd_out[2], int sim_t
     // parent program will continue
 }
 
+void read_and_verify(uint8_t test_byte, int fd_in[])  {
 
+    uint8_t buf[1];
+    if (read(fd_in[READ], buf, 1) != 1) {
+        perror("read");
+        exit(EXIT_FAILURE);
+    }
 
+    if (buf[0] != test_byte) {
+        exit(EXIT_FAILURE);
+    }
 
+}
+
+uint8_t send_bytes(int num, int fd_out[]) {
+
+    uint8_t time_bytes[4];
+    *(uint32_t *) time_bytes = (uint32_t) num;
+    // big endian (MSB in lowest mem address)
+    for (int i = 3; i >= 0; i--) {
+        if (write(fd_out[WRITE], &time_bytes[i], 1) != 1) {
+            perror("write");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    return time_bytes[0];
+
+}
 
 
 
