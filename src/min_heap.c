@@ -70,7 +70,7 @@ process_t *extract_min(min_heap_t *heap) {
 
 void up_heap(min_heap_t *heap, int index) {
     int parent = (index - 1) / 2;
-    if (index > 0 && cmp_service_time(heap->processes[parent], heap->processes[index])) {
+    if (index > 0 && cmp_service_time(heap->processes[parent], heap->processes[index]) > 0) {
         process_t *temp = heap->processes[index];
         heap->processes[index] = heap->processes[parent];
         heap->processes[parent] = temp;
@@ -83,11 +83,11 @@ void down_heap(min_heap_t *heap, int index) {
     int left = 2 * index + 1;
     int right = 2 * index + 2;
 
-    if (left < heap->num_items && cmp_service_time(heap->processes[smallest], heap->processes[left])) {//heap->data[left] < heap->data[smallest]) {
+    if (left < heap->num_items && cmp_service_time(heap->processes[smallest], heap->processes[left]) > 0) {//heap->data[left] < heap->data[smallest]) {
         smallest = left;
     }
 
-    if (right < heap->num_items && cmp_service_time(heap->processes[smallest], heap->processes[right])) {
+    if (right < heap->num_items && cmp_service_time(heap->processes[smallest], heap->processes[right]) > 0) {
         smallest = right;
     }
 

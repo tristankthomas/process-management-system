@@ -158,11 +158,12 @@ void set_value(process_t *process, int value, char field) {
 int cmp_service_time(process_t *p1, process_t *p2) {
 
     if (p1->service_time < p2->service_time) {
-        return 0;
+        return -1;
     } else if (p1->service_time > p2->service_time) {
         return 1;
-    } else {
-        return 0;
+    } else if (p1->service_time == p2->service_time) {
+        // lexicographical order of name
+        return strcmp(p1->name, p2->name);
     }
 }
 
