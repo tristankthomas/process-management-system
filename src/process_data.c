@@ -27,7 +27,7 @@ struct process {
     char* name;
     state_t state;
     node_t *block_node;
-
+    pid_t pid;
 };
 
 
@@ -94,6 +94,8 @@ double get_value(process_t *process, char field) {
             return process->turnaround_time;
         case 'o':
             return process->overhead;
+        case 'p':
+            return process->pid;
         default:
             exit(EXIT_FAILURE);
     }
@@ -148,6 +150,9 @@ void set_value(process_t *process, int value, char field) {
         case 'o':
             process->overhead = value;
             break;
+        case 'p':
+            process->pid = value;
+            break;
         default:
             exit(EXIT_FAILURE);
 
@@ -161,7 +166,7 @@ int cmp_service_time(process_t *p1, process_t *p2) {
         return -1;
     } else if (p1->service_time > p2->service_time) {
         return 1;
-    } else if (p1->service_time == p2->service_time) {
+    } else {
         // lexicographical order of name
         return strcmp(p1->name, p2->name);
     }
