@@ -46,19 +46,20 @@ void *allocate_memory(list_t *memory, list_t *holes, list_t *input, void *ready,
 
         node_t *curr = get_head(input);
         node_t *next;
+        int is_space;
 
         while (curr != NULL) {
             process = (process_t *) get_data(curr);
 
-            if (best_fit(holes, memory, process)) {
+            if ((is_space = best_fit(holes, memory, process))) {
                 process_ready(process, ready, sim_time, mem_strategy, insert);
                 delete_node(input, curr);
             }
             next = get_next(curr);
-
-            free(curr);
-            curr = NULL;
-
+            if (is_space) {
+                free(curr);
+                curr = NULL;
+            }
             curr = next;
         }
 
