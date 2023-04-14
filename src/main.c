@@ -280,7 +280,7 @@ void finish_process(process_t *process, list_t *finished, list_t *memory, list_t
     kill(get_value(process, 'p'), SIGTERM);
     read(get_fd_in(process)[READ], sha256, 64);
 
-    printf("%d,FINISH-PROCESS,process_name=%s,sha=", sim_time, get_name(process));
+    printf("%d,FINISHED-PROCESS,process_name=%s,sha=", sim_time, get_name(process));
     for (int i = 0; i < 64; i++) {
         printf("%c", sha256[i]);
     }
