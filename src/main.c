@@ -33,9 +33,6 @@ enum state {
     IDLE, READY, RUNNING, FINISHED
 };
 
-enum p_state {
-    NOT_STARTED, RUN, SUSPENDED
-};
 
 void process_args(int argc, char **argv, char **scheduler, char **mem_strategy, int *quantum, FILE **file);
 void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy);
@@ -253,9 +250,6 @@ void suspend_process(process_t *process, int sim_time) {
     } while (!WIFSTOPPED(wstatus));
 
 
-    set_p_state(process, SUSPENDED);
-
-
 
 }
 
@@ -264,7 +258,6 @@ void continue_process(process_t *process, int sim_time) {
     int8_t test_byte = send_bytes(process, sim_time);
     kill(get_value(process, 'p'), SIGCONT);
     read_and_verify(process, test_byte);
-    set_p_state(process, RUN);
 
 }
 
@@ -354,8 +347,6 @@ void run_real_process(process_t *process, int sim_time) {
     }
 
     set_value(process, child_pid, 'p');
-    set_p_state(process, RUN);
-
     // parent program will continue
 }
 

@@ -15,7 +15,6 @@
 
 
 typedef enum state state_t;
-typedef enum p_state p_state_t;
 // fix this
 typedef struct process process_t;
 typedef struct node node_t;
@@ -39,7 +38,6 @@ node_t *get_block_node(process_t *process);
 void update_stats(process_t *process);
 int update_time(int quantum, process_t *process);
 
-void set_p_state(process_t *process, p_state_t state);
 void set_fds(process_t *process, int fd_in[], int fd_out[]);
 int *get_fd_in(process_t *process);
 int *get_fd_out(process_t *process);
