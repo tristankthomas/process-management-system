@@ -12,6 +12,10 @@
 #include <stdint.h>
 #include <math.h>
 #include <signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
+
 
 #include "process_data.h"
 #include "process_scheduling.h"
@@ -29,16 +33,23 @@ enum state {
     IDLE, READY, RUNNING, FINISHED
 };
 
+enum p_state {
+    NOT_STARTED, RUN, SUSPENDED
+};
+
 void process_args(int argc, char **argv, char **scheduler, char **mem_strategy, int *quantum, FILE **file);
 void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy);
-void finish_process(process_t *process, list_t *finished, list_t *memory, list_t *holes, int proc_remaining, int sim_time, char *mem_strategy, int fd_in[], int fd_out[]);
-process_t *run_next_process(void *ready, int sim_time, process_t *(*extract)(void *), int (*is_empty)(void *), int fd_in[], int fd_out[]);
+void finish_process(process_t *process, list_t *finished, list_t *memory, list_t *holes, int proc_remaining, int sim_time, char *mem_strategy);
+process_t *run_next_process(void *ready, int sim_time, process_t *(*extract)(void *), int (*is_empty)(void *));
 void print_statistics(list_t *finished, int makespan);
 double mean(list_t *list, char field);
 double max(list_t *list, char field);
-void run_real_process(process_t *process, int fd_in[], int fd_out[], int sim_time);
-uint8_t send_bytes(int num, int fd_out[]);
-void read_and_verify(uint8_t test_byte, int fd_in[]);
+void run_real_process(process_t *process, int sim_time);
+uint8_t send_bytes(process_t *process, int num);
+void read_and_verify(process_t *process, uint8_t test_byte);
+void suspend_process(process_t *process, int sim_time);
+void continue_process(process_t *process, int sim_time);
+
 
 
 int main(int argc, char *argv[]) {
@@ -108,10 +119,10 @@ void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) 
     int num_processes = get_list_size(processes);
     process_t *current_process = NULL;
     // file descriptors for pipe
-    int fd_out[2], fd_in[2];
+
 
     int processes_remaining;
-    int run_new_process;
+    int new_process;
     int no_process_running = 0;
     list_t *memory = create_empty_list();
     list_t *holes = create_empty_list();
@@ -128,16 +139,16 @@ void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) 
                 update_input(input_queue, processes, sim_time);
                 ready_queue = create_heap();
                 ready_queue = allocate_memory(memory, holes, input_queue, ready_queue, mem_strategy, sim_time, (int (*)(void *, process_t *)) insert_process);
-                current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) extract_min, (int (*)(void *)) is_empty_heap, fd_in, fd_out);
+                current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) extract_min, (int (*)(void *)) is_empty_heap);
                 sim_time += quantum;
                 continue;
             }
 
             // updates service time of current process and finishes process if finished
-            if ((run_new_process = update_time(quantum, current_process))) {
+            if ((new_process = update_time(quantum, current_process))) {
 
                 processes_remaining = get_list_size(input_queue) + get_heap_size(ready_queue);
-                finish_process(current_process, finished_queue, memory, holes, processes_remaining, sim_time, mem_strategy, fd_in, fd_out);
+                finish_process(current_process, finished_queue, memory, holes, processes_remaining, sim_time, mem_strategy);
                 no_process_running = 1;
                 if (get_list_size(finished_queue) == num_processes) {
                     break;
@@ -148,15 +159,14 @@ void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) 
             update_input(input_queue, processes, sim_time);
             // updates ready queue
             if (!no_process_running) {
-                uint8_t test_byte = send_bytes(sim_time, fd_out);
-                kill(get_value(current_process, 'p'), SIGCONT);
-                read_and_verify(test_byte, fd_in);
+
+                continue_process(current_process, sim_time);
 
             }
             ready_queue = allocate_memory(memory, holes, input_queue, ready_queue, mem_strategy, sim_time, (int (*)(void *, process_t *)) insert_process);
             // starts new process
-            if (run_new_process || (!is_empty_heap(ready_queue) && no_process_running)) {
-                current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) extract_min, (int (*)(void *)) is_empty_heap, fd_in, fd_out);
+            if (new_process || (!is_empty_heap(ready_queue) && no_process_running)) {
+                current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) extract_min, (int (*)(void *)) is_empty_heap);
                 no_process_running = (current_process == NULL) ? 1 : 0;
             }
 
@@ -169,17 +179,17 @@ void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) 
                 update_input(input_queue, processes, sim_time);
                 ready_queue = create_empty_list();
                 ready_queue = allocate_memory(memory, holes, input_queue, ready_queue, mem_strategy, sim_time, (int (*)(void *, process_t *)) enqueue);
-                current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) dequeue, (int (*)(void *)) is_empty_list, fd_in, fd_out);
+                current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) dequeue, (int (*)(void *)) is_empty_list);
                 sim_time += quantum;
                 continue;
             }
 
             // updates service time of current process and finishes process if finished
-            if ((run_new_process = update_time(quantum, current_process))) {
+            if ((new_process = update_time(quantum, current_process))) {
 
                 processes_remaining = get_list_size(input_queue) + get_list_size(ready_queue);
 
-                finish_process(current_process, finished_queue, memory, holes, processes_remaining, sim_time, mem_strategy, fd_in, fd_out);
+                finish_process(current_process, finished_queue, memory, holes, processes_remaining, sim_time, mem_strategy);
 
                 if (get_list_size(finished_queue) == num_processes) {
                     break;
@@ -193,12 +203,14 @@ void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) 
             ready_queue = allocate_memory(memory, holes, input_queue, ready_queue, mem_strategy, sim_time, (int (*)(void *, process_t *)) enqueue);
 
             // suspend processes and decide which to run
-            if (run_new_process) {
-                current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) dequeue, (int (*)(void *)) is_empty_list, fd_in, fd_out);
+            if (new_process) {
+                current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) dequeue, (int (*)(void *)) is_empty_list);
             } else if (!is_empty_list(ready_queue)) {
                 enqueue(ready_queue, current_process);
-                current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) dequeue, (int (*)(void *)) is_empty_list, fd_in, fd_out);
-
+                suspend_process(current_process, sim_time);
+                current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) dequeue, (int (*)(void *)) is_empty_list);
+            } else {
+                continue_process(current_process, sim_time);
             }
 
 
@@ -224,9 +236,39 @@ void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) 
 
 }
 
+void suspend_process(process_t *process, int sim_time) {
+
+    send_bytes(process, sim_time);
+    int wstatus, w;
+
+    kill(get_value(process, 'p'), SIGTSTP);
+
+    do {
+        w = waitpid(get_value(process, 'p'), &wstatus, WUNTRACED);
+        if (w == -1) {
+            perror("waitpid");
+            exit(EXIT_FAILURE);
+        }
+
+    } while (!WIFSTOPPED(wstatus));
 
 
-void finish_process(process_t *process, list_t *finished, list_t *memory, list_t *holes, int proc_remaining, int sim_time, char *mem_strategy, int fd_in[], int fd_out[]) {
+    set_p_state(process, SUSPENDED);
+
+
+
+}
+
+void continue_process(process_t *process, int sim_time) {
+
+    int8_t test_byte = send_bytes(process, sim_time);
+    kill(get_value(process, 'p'), SIGCONT);
+    read_and_verify(process, test_byte);
+    set_p_state(process, RUN);
+
+}
+
+void finish_process(process_t *process, list_t *finished, list_t *memory, list_t *holes, int proc_remaining, int sim_time, char *mem_strategy) {
     char sha256[64];
 
     set_state(process, FINISHED);
@@ -234,9 +276,9 @@ void finish_process(process_t *process, list_t *finished, list_t *memory, list_t
     printf("%d,FINISHED,process_name=%s,proc_remaining=%d\n", sim_time, get_name(process), proc_remaining);
 
     // terminate
-    send_bytes(sim_time, fd_out);
+    send_bytes(process, sim_time);
     kill(get_value(process, 'p'), SIGTERM);
-    read(fd_in[READ], sha256, 64);
+    read(get_fd_in(process)[READ], sha256, 64);
 
     printf("%d,FINISH-PROCESS,process_name=%s,sha=", sim_time, get_name(process));
     for (int i = 0; i < 64; i++) {
@@ -251,21 +293,30 @@ void finish_process(process_t *process, list_t *finished, list_t *memory, list_t
 
 
 
-process_t *run_next_process(void *ready, int sim_time, process_t *(*extract)(void *), int (*is_empty)(void *), int fd_in[], int fd_out[]) {
+process_t *run_next_process(void *ready, int sim_time, process_t *(*extract)(void *), int (*is_empty)(void *)) {
 
     if (is_empty(ready)) {
         return NULL;
     }
     process_t *current_process = extract(ready);
-    run_real_process(current_process, fd_in, fd_out, sim_time);
+
+    if (get_value(current_process, 'p') == 0) {
+        run_real_process(current_process, sim_time);
+    } else {
+        continue_process(current_process, sim_time);
+    }
+
 
     set_state(current_process, RUNNING);
     printf("%d,RUNNING,process_name=%s,remaining_time=%d\n", sim_time, get_name(current_process), (int) get_value(current_process, 'l'));
     return current_process;
 }
 
-void run_real_process(process_t *process, int fd_in[], int fd_out[], int sim_time) {
 
+
+
+void run_real_process(process_t *process, int sim_time) {
+    int fd_out[2], fd_in[2];
     pid_t child_pid;
 
     if (pipe(fd_out) == -1 || pipe(fd_in) == -1) {
@@ -294,23 +345,24 @@ void run_real_process(process_t *process, int fd_in[], int fd_out[], int sim_tim
 
         close(fd_out[READ]); // close read
         close(fd_in[WRITE]); // close write
-
+        set_fds(process, fd_in, fd_out);
         // create
-        uint8_t test_byte = send_bytes(sim_time, fd_out);
-        read_and_verify(test_byte, fd_in);
+        uint8_t test_byte = send_bytes(process, sim_time);
+        read_and_verify(process, test_byte);
 
 
     }
 
     set_value(process, child_pid, 'p');
+    set_p_state(process, RUN);
 
     // parent program will continue
 }
 
-void read_and_verify(uint8_t test_byte, int fd_in[])  {
+void read_and_verify(process_t *process, uint8_t test_byte)  {
 
     uint8_t buf[1];
-    if (read(fd_in[READ], buf, 1) != 1) {
+    if (read(get_fd_in(process)[READ], buf, 1) != 1) {
         perror("read");
         exit(EXIT_FAILURE);
     }
@@ -321,13 +373,13 @@ void read_and_verify(uint8_t test_byte, int fd_in[])  {
 
 }
 
-uint8_t send_bytes(int num, int fd_out[]) {
+uint8_t send_bytes(process_t *process, int num) {
 
     uint8_t time_bytes[4];
     *(uint32_t *) time_bytes = (uint32_t) num;
     // big endian (MSB in lowest mem address)
     for (int i = 3; i >= 0; i--) {
-        if (write(fd_out[WRITE], &time_bytes[i], 1) != 1) {
+        if (write(get_fd_out(process)[WRITE], &time_bytes[i], 1) != 1) {
             perror("write");
             exit(EXIT_FAILURE);
         }

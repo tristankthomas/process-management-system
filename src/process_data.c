@@ -21,6 +21,10 @@ enum block_type {
     PROCESS, HOLE
 };
 
+enum p_state {
+    NOT_STARTED, RUN, SUSPENDED
+};
+
 struct process {
     int arrival_time, service_time, service_time_left, mem_requirement, finish_time, turnaround_time;
     double overhead;
@@ -28,7 +32,11 @@ struct process {
     state_t state;
     node_t *block_node;
     pid_t pid;
+    p_state_t p_state;
+    int fd_out[2],fd_in[2];
 };
+
+
 
 
 
@@ -44,6 +52,7 @@ process_t *read_process(FILE **file) {
 
     if (fscanf(*file, "%d %s %d %d", &time_arrived, name, &service_time, &mem_requirement) != EOF) {
         process->state = IDLE;
+        process->p_state = NOT_STARTED;
         process->mem_requirement = mem_requirement;
         process->service_time = service_time;
         process->service_time_left = service_time;
@@ -57,6 +66,10 @@ process_t *read_process(FILE **file) {
 
     return process;
 
+}
+
+void set_p_state(process_t *process, p_state_t state) {
+    process->p_state = state;
 }
 
 list_t *load_processes(list_t *processes, FILE **file) {
@@ -182,4 +195,20 @@ void set_block_node(process_t *process, node_t *block_node) {
 
 node_t *get_block_node(process_t *process) {
     return process->block_node;
+}
+
+void set_fds(process_t *process, int fd_in[], int fd_out[]) {
+    process->fd_in[0] = fd_in[0];
+    process->fd_in[1] = fd_in[1];
+    process->fd_out[0] = fd_out[0];
+    process->fd_out[1] = fd_out[1];
+
+}
+
+int *get_fd_in(process_t *process) {
+    return process->fd_in;
+}
+
+int *get_fd_out(process_t *process) {
+    return process->fd_out;
 }
