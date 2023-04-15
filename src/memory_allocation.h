@@ -1,5 +1,5 @@
 /*
- * memory_allocation.h - Contains function declarations for the memory allocation algorithms
+ * memory_allocation.h - Contains interface for memory allocation
  * Author: Tristan Thomas
  * Date: 6-4-2023
  */
@@ -21,17 +21,52 @@ typedef struct node node_t;
 typedef struct process process_t;
 
 
-
+/**
+ * Allocates memory to a process depending on the memory strategy
+ *
+ * @param memory Memory management data structure
+ * @param holes List of free memory blocks (nodes of memory)
+ * @param input List of unallocated and arrived processes
+ * @param ready List of allocated processes (data structure depending on scheduling algorithm)
+ * @param mem_strategy Memory allocation strategy
+ * @param sim_time Simulation time
+ * @param insert Function to insert process into ready queue
+ * @return Ready queue
+ */
 void *allocate_memory(list_t *memory, list_t *holes, list_t *input, void *ready, char *mem_strategy, int sim_time, int (*insert)(void *, process_t *));
+
+/**
+ * Deallocates the memory for a process once it is terminated
+ *
+ * @param process Process to be deallocated
+ * @param memory Memory management list
+ * @param holes List of holes
+ * @param mem_strategy Memory strategy
+ */
 void deallocate_memory(process_t *process, list_t *memory, list_t *holes, char *mem_strategy);
+
+/**
+ * Initialises memory and holes to 2048 Bytes
+ *
+ * @param memory Memory management list
+ * @param holes List of holes
+ */
 void initialise_memory(list_t *memory, list_t *holes);
-block_t *create_block(block_type_t type, int start, int size);
-int best_fit(list_t *holes, list_t *memory, process_t *process);
-void split(process_t *process, node_t *node, list_t *holes, list_t *memory);
+
+/**
+ * Gets size of block
+ *
+ * @param block Specified block
+ * @return Size of block
+ */
 int *get_size(block_t *block);
-int compare_sizes(int *size1, int *size2);
-void process_ready(process_t *process, void *ready, int sim_time, char *mem_strategy, int (*insert)(void *, process_t *));
-void update_memory(list_t *memory, list_t *holes, node_t *main_node, node_t *adj_node);
-void check_direction(list_t *memory, list_t *holes, node_t *block_node, node_t *(*get_dir)(node_t *));
+
+/**
+ * Compares two ints - used to compare block sizes when inserting block into holes list
+ * @param int1 Pointer to int
+ * @param int2 Pointer to int
+ * @return Returns 1, 0 or -1 depending on relative int values
+ */
+int compare_ints(int *int1, int *int2);
 
 #endif
