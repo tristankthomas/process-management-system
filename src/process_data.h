@@ -17,11 +17,9 @@
 
 
 typedef enum state state_t;
-// fix this
 typedef struct process process_t;
 typedef struct node node_t;
 typedef struct list list_t;
-typedef struct node node_t;
 typedef struct block block_t;
 
 enum state {
