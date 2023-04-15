@@ -13,14 +13,14 @@
 
 /* Definition of min heap data structure */
 struct min_heap {
-    process_t **processes;
+    void **data;
     int num_items;
     int capacity;
 };
 
-static void up_heap(min_heap_t *heap, int index);
-static void down_heap(min_heap_t *heap, int index);
-static void swap(process_t **p1, process_t **p2);
+static void up_heap(min_heap_t *heap, int index, int (compare)(void *, void *));
+static void down_heap(min_heap_t *heap, int index, int (compare)(void *, void *));
+static void swap(void **p1, void **p2);
 
 
 /**
@@ -32,9 +32,9 @@ min_heap_t *create_heap() {
 
     min_heap_t *heap = malloc(sizeof(*heap));
     assert(heap);
-    // allocates memory for processes in heap
-    heap->processes = malloc(INIT_SIZE * sizeof(*heap->processes));
-    assert(heap->processes);
+    // allocates memory for data in heap
+    heap->data = malloc(INIT_SIZE * sizeof(*heap->data));
+    assert(heap->data);
     heap->num_items = 0;
     heap->capacity = INIT_SIZE;
 
@@ -43,52 +43,52 @@ min_heap_t *create_heap() {
 }
 
 /**
- * This function adds a process to the min heap and heapifies it
+ * This function adds a data element to the min heap and heapifies it
  *
- * @param heap Heap that process will be added to
- * @param process Process to add to heap
+ * @param heap Heap that the data element will be added to
+ * @param data Data element to add to heap
  */
-void insert_process(min_heap_t *heap, process_t *process) {
+void insert_data(min_heap_t *heap, void *data) {
 
     if (heap->num_items >= heap->capacity) {
         heap->capacity *= 2;
-        heap->processes = realloc(heap->processes, heap->capacity * sizeof(process));
-        assert(heap->processes);
+        heap->data = realloc(heap->data, heap->capacity * sizeof(data));
+        assert(heap->data);
 
     }
-    heap->processes[heap->num_items++] = process;
+    heap->data[heap->num_items++] = data;
 
-    // fixes heap
-    up_heap(heap, heap->num_items - 1);
+    // fixes heap (need to use specific comparison function here as num_args(insert_data) == num_args(enqueue))
+    up_heap(heap, heap->num_items - 1, (int (*)(void *, void *)) cmp_service_time);
 
 
 }
 
 /**
- * This function extracts minimum process from heap and then fixes heap
+ * This function extracts minimum data element from heap and then fixes heap
  *
  * @param heap Heap to be extracted from
- * @return Extracted process
+ * @return Extracted data element
  */
-process_t *extract_min(min_heap_t *heap) {
+void *extract_min(min_heap_t *heap) {
 
     if (heap->num_items == 0) {
         return NULL;
     }
     // extracts min
-    process_t *min = heap->processes[0];
+    void *min = heap->data[0];
     heap->num_items--;
 
     // empty heap
     if (heap->num_items == 0) {
-        heap->processes[0] = NULL;
+        heap->data[0] = NULL;
         return min;
     }
     // move last element to first
-    heap->processes[0] = heap->processes[heap->num_items];
+    heap->data[0] = heap->data[heap->num_items];
 
-    // fix heap
-    down_heap(heap, 0);
+    // fix heap (need to use specific comparison function here as num_args(extract_min) == num_args(dequeue))
+    down_heap(heap, 0, (int (*)(void *, void *)) cmp_service_time);
 
     return min;
 
@@ -96,18 +96,18 @@ process_t *extract_min(min_heap_t *heap) {
 }
 
 /**
- * Performs up heap operation after process is inserted
+ * Performs up heap operation after data element is inserted
  *
  * @param heap Heap to be fixed
  * @param index Index of inserted item
  */
-static void up_heap(min_heap_t *heap, int index) {
+static void up_heap(min_heap_t *heap, int index, int (compare)(void *, void *)) {
     int parent = (index - 1) / 2;
-    if (index > 0 && cmp_service_time(heap->processes[parent], heap->processes[index]) > 0) {
-        process_t *temp = heap->processes[index];
-        heap->processes[index] = heap->processes[parent];
-        heap->processes[parent] = temp;
-        up_heap(heap, parent);
+    if (index > 0 && compare(heap->data[parent], heap->data[index]) > 0) {
+        void *temp = heap->data[index];
+        heap->data[index] = heap->data[parent];
+        heap->data[parent] = temp;
+        up_heap(heap, parent, compare);
     }
 }
 
@@ -115,40 +115,40 @@ static void up_heap(min_heap_t *heap, int index) {
  * Performs down heap operation after min is deleted
  *
  * @param heap Heap to be fixed
- * @param index Index of deleted process (0)
+ * @param index Index of deleted data element (0)
  */
- static void down_heap(min_heap_t *heap, int index) {
+ static void down_heap(min_heap_t *heap, int index, int (compare)(void *, void *)) {
 
     int smallest = index;
     int left = 2 * index + 1;
     int right = 2 * index + 2;
 
-    if (left < heap->num_items && cmp_service_time(heap->processes[smallest], heap->processes[left]) > 0) {
+    if (left < heap->num_items && compare(heap->data[smallest], heap->data[left]) > 0) {
         smallest = left;
     }
 
-    if (right < heap->num_items && cmp_service_time(heap->processes[smallest], heap->processes[right]) > 0) {
+    if (right < heap->num_items && cmp_service_time(heap->data[smallest], heap->data[right]) > 0) {
         smallest = right;
     }
 
     if (smallest != index) {
-        swap(&heap->processes[index], &heap->processes[smallest]);
-        down_heap(heap, smallest);
+        swap(&heap->data[index], &heap->data[smallest]);
+        down_heap(heap, smallest, compare);
     }
 
 }
 
 /**
- * Swaps two processes in the heap
+ * Swaps two data elements in the heap
  *
- * @param p1 Process 1
- * @param p2 Process 2
+ * @param d1 Data 1
+ * @param d2 Data 2
  */
-static void swap(process_t **p1, process_t **p2) {
+static void swap(void **d1, void **d2) {
 
-    process_t *temp = *p1;
-    *p1 = *p2;
-    *p2 = temp;
+    void *temp = *d1;
+    *d1 = *d2;
+    *d2 = temp;
 }
 
 /**
@@ -158,8 +158,8 @@ static void swap(process_t **p1, process_t **p2) {
  */
 void free_heap(min_heap_t *heap) {
 
-    free(heap->processes);
-    heap->processes = NULL;
+    free(heap->data);
+    heap->data = NULL;
     free(heap);
     heap = NULL;
 
@@ -169,7 +169,7 @@ void free_heap(min_heap_t *heap) {
  * Gets the heap size
  *
  * @param heap Specified heap
- * @return Number of processes in the heap
+ * @return Number of data elements in the heap
  */
 int get_heap_size(min_heap_t *heap) {
 

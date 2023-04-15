@@ -11,8 +11,6 @@
 
 typedef struct node node_t;
 typedef struct list list_t;
-// to remove the circular dependency
-typedef struct process process_t;
 
 
 /**

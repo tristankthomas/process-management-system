@@ -153,7 +153,7 @@ void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) 
                 update_input(input_queue, processes, sim_time);
                 ready_queue = create_heap();
                 ready_queue = allocate_memory(memory, holes, input_queue, ready_queue, mem_strategy,
-                                              sim_time, (int (*)(void *, process_t *)) insert_process);
+                                              sim_time, (int (*)(void *, process_t *)) insert_data);
                 current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) extract_min,
                                                    (int (*)(void *)) is_empty_heap);
 
@@ -185,7 +185,7 @@ void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) 
             }
             // updates ready queue
             ready_queue = allocate_memory(memory, holes, input_queue, ready_queue, mem_strategy, sim_time,
-                                          (int (*)(void *, process_t *)) insert_process);
+                                          (int (*)(void *, process_t *)) insert_data);
 
             // starts new process
             if (new_process || (!is_empty_heap(ready_queue) && no_process_running)) {
