@@ -183,6 +183,7 @@ void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) 
             ready_queue = allocate_memory(memory, holes, input_queue, ready_queue, mem_strategy, sim_time,
                                           (int (*)(void *, process_t *)) insert_data);
 
+            // SJF scheduling algorithm
             if (no_process_running) {
                 // starts new process if there is one available
                 if (is_empty_heap(ready_queue)) {
@@ -236,7 +237,7 @@ void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) 
             ready_queue = allocate_memory(memory, holes, input_queue, ready_queue, mem_strategy, sim_time,
                                           (int (*)(void *, process_t *)) enqueue);
 
-            // suspend processes and decide which to run
+            // RR scheduling algorithm
             if (no_process_running) {
 
                 if (is_empty_list(ready_queue)) {
