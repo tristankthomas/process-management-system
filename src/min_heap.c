@@ -97,6 +97,7 @@ void *extract_min(min_heap_t *heap) {
 
 /**
  * Performs up heap operation after data element is inserted
+ * This function was adapted from https://www.geeksforgeeks.org/building-heap-from-array/
  *
  * @param heap Heap to be fixed
  * @param index Index of inserted item
@@ -113,6 +114,7 @@ static void up_heap(min_heap_t *heap, int index, int (compare)(void *, void *)) 
 
 /**
  * Performs down heap operation after min is deleted
+ * This function was adapted from https://www.geeksforgeeks.org/building-heap-from-array/
  *
  * @param heap Heap to be fixed
  * @param index Index of deleted data element (0)
