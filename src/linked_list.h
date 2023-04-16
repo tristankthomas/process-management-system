@@ -7,8 +7,6 @@
 #ifndef LINKED_LIST_H
 #define LINKED_LIST_H
 
-#include "process_data.h"
-
 typedef struct node node_t;
 typedef struct list list_t;
 

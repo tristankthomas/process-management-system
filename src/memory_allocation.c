@@ -11,7 +11,6 @@
 
 #include "memory_allocation.h"
 #include "linked_list.h"
-#include "min_heap.h"
 #include "process_data.h"
 
 /* Definitions of memory block and block type enum */
@@ -45,7 +44,8 @@ static block_t *create_block(block_type_t type, int start, int size);
  * @param insert Function to insert process into ready queue
  * @return Ready queue
  */
-void *allocate_memory(list_t *memory, list_t *holes, list_t *input, void *ready, char *mem_strategy, int sim_time, int (*insert)(void *, process_t *)) {
+void *allocate_memory(list_t *memory, list_t *holes, list_t *input, void *ready, char *mem_strategy, int sim_time,
+                      int (*insert)(void *, process_t *)) {
     process_t *process;
     if (strcmp(mem_strategy, "infinite") == 0) {
 
@@ -60,7 +60,7 @@ void *allocate_memory(list_t *memory, list_t *holes, list_t *input, void *ready,
         node_t *next;
         int is_space;
 
-        while (curr != NULL) {
+        while (curr) {
             process = (process_t *) get_data(curr);
 
             if ((is_space = best_fit(holes, memory, process))) {
@@ -183,12 +183,12 @@ void deallocate_memory(process_t *process, list_t *memory, list_t *holes, char *
         ((block_t *) get_data(block_node))->type = HOLE;
 
         // check to right
-        if (get_next(block_node) != NULL) {
+        if (get_next(block_node)) {
             check_direction(memory, holes, block_node, get_next);
         }
 
         // check to left
-        if (get_prev(block_node) != NULL) {
+        if (get_prev(block_node)) {
             check_direction(memory, holes, block_node, get_prev);
         }
         // need to delete holes from holes list when updating memory
@@ -221,7 +221,7 @@ static void check_direction(list_t *memory, list_t *holes, node_t *block_node, n
 
         curr = next;
 
-        if (curr == NULL) {
+        if (!curr) {
             break;
         }
 
@@ -302,7 +302,8 @@ static void process_ready(process_t *process, void *ready, int sim_time, char *m
     set_state(process, READY);
     insert(ready, process);
     if (strcmp(mem_strategy, "best-fit") == 0) {
-        printf("%d,READY,process_name=%s,assigned_at=%d\n", sim_time, get_name(process), ((block_t *) get_data(get_block_node(process)))->start_address);
+        printf("%d,READY,process_name=%s,assigned_at=%d\n", sim_time, get_name(process),
+               ((block_t *) get_data(get_block_node(process)))->start_address);
     }
 
 }

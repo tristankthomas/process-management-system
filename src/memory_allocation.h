@@ -7,10 +7,6 @@
 #ifndef MEMORY_ALLOCATION_H
 #define MEMORY_ALLOCATION_H
 
-#include "linked_list.h"
-#include "min_heap.h"
-#include "process_data.h"
-
 #define MEM_CAPACITY 2048
 
 typedef enum state state_t;
@@ -33,7 +29,8 @@ typedef struct process process_t;
  * @param insert Function to insert process into ready queue
  * @return Ready queue
  */
-void *allocate_memory(list_t *memory, list_t *holes, list_t *input, void *ready, char *mem_strategy, int sim_time, int (*insert)(void *, process_t *));
+void *allocate_memory(list_t *memory, list_t *holes, list_t *input, void *ready, char *mem_strategy, int sim_time,
+                      int (*insert)(void *, process_t *));
 
 /**
  * Deallocates the memory for a process once it is terminated

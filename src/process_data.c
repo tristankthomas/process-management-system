@@ -95,6 +95,7 @@ void free_process(process_t *process) {
  * @return Value
  */
 double get_value(process_t *process, enum value field) {
+
     switch (field) {
         case ARRIVAL_TIME:
             return process->arrival_time;
@@ -136,7 +137,8 @@ void update_stats(process_t *process) {
  * @return 1 if process is finished, 0 otherwise
  */
 int update_time(int quantum, process_t *process) {
-    if (process == NULL) {
+
+    if (!process) {
         return 0;
     }
 
@@ -158,6 +160,7 @@ int update_time(int quantum, process_t *process) {
  * @return Process name
  */
 char *get_name(process_t *process) {
+
     return process->name;
 }
 

@@ -8,8 +8,6 @@
 #define PROCESS_DATA_H
 
 #include <stdio.h>
-#include "linked_list.h"
-#include "memory_allocation.h"
 
 #define MAX_NAME_LEN 8
 #define READ 0
@@ -53,7 +51,6 @@ void free_process(process_t *process);
  * @return Value
  */
 double get_value(process_t *process, enum value field);
-process_t *get_process(node_t *node);
 
 /**
  * Compares service time used for min heap sorting

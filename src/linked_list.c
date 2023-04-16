@@ -51,14 +51,14 @@ list_t *create_empty_list() {
  */
 int enqueue(list_t *list, void *data) {
 
-    if (data == NULL) {
+    if (!data) {
         return 0;
     }
 
     node_t *new = create_node(data, NULL, list->tail);
 
     // Empty linked list
-    if (list->head == NULL) {
+    if (!list->head) {
         list->head = new;
         list->tail = new;
         list->num_items++;
@@ -84,12 +84,12 @@ int enqueue(list_t *list, void *data) {
  * @return Data element stored in head of linked list
  */
 void *dequeue(list_t *list) {
-    if (list->head == NULL) {
+    if (!list->head) {
         return NULL;
     }
     node_t *head = list->head;
     list->head = head->next;
-    if (list->head == NULL) {
+    if (!list->head) {
         list->tail = NULL;
     }
     list->num_items--;
@@ -136,7 +136,7 @@ void insert_node_sorted(list_t *list, node_t *block_node, int (*compare)(void *,
     void *value = get_sort_value(get_data(block_node));
 
     // as soon as block size is smaller insert in that position
-    while (curr != NULL && (compare(get_sort_value(get_data(get_data(curr))), value) < 0)) {
+    while (curr && (compare(get_sort_value(get_data(get_data(curr))), value) < 0)) {
         prev = curr;
         curr = curr->next;
     }
@@ -148,11 +148,11 @@ void insert_node_sorted(list_t *list, node_t *block_node, int (*compare)(void *,
     if (is_empty_list(list)) {
         list->head = hole_node;
         list->tail = hole_node;
-    } else if (prev == NULL) {
+    } else if (!prev) {
         // Insert at beginning
         list->head = hole_node;
         curr->prev = hole_node;
-    } else if (curr == NULL) {
+    } else if (!curr) {
         // Insert at tail
         list->tail = hole_node;
         prev->next = hole_node;
@@ -178,7 +178,7 @@ void free_list(list_t *list, void (*free_data)(void *)) {
 
     curr = list->head;
 
-    while (curr != NULL) {
+    while (curr) {
         prev = curr;
         curr = curr->next;
         free_data(prev->data);
@@ -210,7 +210,7 @@ void blank(void *blank) {
  */
 void delete_node(list_t *list, node_t *node) {
 
-    if (list->head == NULL || list->tail == NULL || node == NULL) {
+    if (!list->head || !list->tail || !node) {
         return;
     }
 
@@ -224,12 +224,12 @@ void delete_node(list_t *list, node_t *node) {
         list->tail = node->prev;
     }
 
-    if (node->next != NULL) {
+    if (node->next) {
         // removing the link
         node->next->prev = node->prev;
     }
 
-    if (node->prev != NULL) {
+    if (node->prev) {
         node->prev->next = node->next;
     }
 
@@ -285,12 +285,12 @@ node_t *insert_node(list_t* list, void *data, node_t *prev, node_t *next) {
 
     node_t *new = create_node(data, next, prev);
 
-    if (prev != NULL) {
+    if (prev) {
         prev->next = new;
     } else {
         list->head = new;
     }
-    if (next != NULL) {
+    if (next) {
         next->prev = new;
     } else {
         list->tail = new;

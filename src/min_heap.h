@@ -11,6 +11,7 @@
 
 typedef struct min_heap min_heap_t;
 
+
 /**
  * This function creates an empty min heap of size 2
  *
