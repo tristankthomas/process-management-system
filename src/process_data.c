@@ -211,17 +211,21 @@ void set_value(process_t *process, uint32_t value, enum value field) {
 }
 
 /**
- * Compares service time used for min heap sorting
+ * Compares two processes based on service time, arrival time and then lexicographial ordering, used for min heap sorting
  *
  * @param p1 Process 1
  * @param p2 Process 2
  * @return An int based on comparison property
  */
-int cmp_service_time(process_t *p1, process_t *p2) {
+int compare_process(process_t *p1, process_t *p2) {
 
     if (p1->service_time < p2->service_time) {
         return -1;
     } else if (p1->service_time > p2->service_time) {
+        return 1;
+    } else if (p1->arrival_time < p2->arrival_time) {
+        return -1;
+    } else if (p1->arrival_time > p2->arrival_time) {
         return 1;
     } else {
         // lexicographical order of name

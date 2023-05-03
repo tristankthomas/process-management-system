@@ -55,13 +55,13 @@ void free_process(process_t *process);
 double get_value(process_t *process, enum value field);
 
 /**
- * Compares service time used for min heap sorting
+ * Compares two processes based on service time, arrival time and then lexicographial ordering, used for min heap sorting
  *
  * @param p1 Process 1
  * @param p2 Process 2
  * @return An int based on comparison property
  */
-int cmp_service_time(process_t *p1, process_t *p2);
+int compare_process(process_t *p1, process_t *p2);
 
 /**
  * Sets state of process

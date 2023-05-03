@@ -59,7 +59,7 @@ void insert_data(min_heap_t *heap, void *data) {
     heap->data[heap->num_items++] = data;
 
     // fixes heap (need to use specific comparison function here as num_args(insert_data) == num_args(enqueue))
-    up_heap(heap, heap->num_items - 1, (int (*)(void *, void *)) cmp_service_time);
+    up_heap(heap, heap->num_items - 1, (int (*)(void *, void *)) compare_process);
 
 
 }
@@ -88,7 +88,7 @@ void *extract_min(min_heap_t *heap) {
     heap->data[0] = heap->data[heap->num_items];
 
     // fix heap (need to use specific comparison function here as num_args(extract_min) == num_args(dequeue))
-    down_heap(heap, 0, (int (*)(void *, void *)) cmp_service_time);
+    down_heap(heap, 0, (int (*)(void *, void *)) compare_process);
 
     return min;
 
@@ -129,7 +129,7 @@ static void up_heap(min_heap_t *heap, int index, int (compare)(void *, void *)) 
         smallest = left;
     }
 
-    if (right < heap->num_items && cmp_service_time(heap->data[smallest], heap->data[right]) > 0) {
+    if (right < heap->num_items && compare_process(heap->data[smallest], heap->data[right]) > 0) {
         smallest = right;
     }
 
