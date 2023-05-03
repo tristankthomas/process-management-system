@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <stdint.h>
 
 #include "memory_allocation.h"
 #include "linked_list.h"
@@ -26,7 +27,7 @@ struct block {
 
 static int best_fit(list_t *holes, list_t *memory, process_t *process);
 static void split(process_t *process, node_t *node, list_t *holes, list_t *memory);
-static void process_ready(process_t *process, void *ready, int sim_time, char *mem_strategy, int (*insert)(void *, process_t *));
+static void process_ready(process_t *process, void *ready, uint32_t sim_time, char *mem_strategy, int (*insert)(void *, process_t *));
 static void update_memory(list_t *memory, list_t *holes, node_t *main_node, node_t *adj_node);
 static void check_direction(list_t *memory, list_t *holes, node_t *block_node, node_t *(*get_dir)(node_t *));
 static block_t *create_block(block_type_t type, int start, int size);
@@ -44,7 +45,7 @@ static block_t *create_block(block_type_t type, int start, int size);
  * @param insert Function to insert process into ready queue
  * @return Ready queue
  */
-void *allocate_memory(list_t *memory, list_t *holes, list_t *input, void *ready, char *mem_strategy, int sim_time,
+void *allocate_memory(list_t *memory, list_t *holes, list_t *input, void *ready, char *mem_strategy, uint32_t sim_time,
                       int (*insert)(void *, process_t *)) {
     process_t *process;
     if (strcmp(mem_strategy, "infinite") == 0) {
@@ -297,12 +298,12 @@ static block_t *create_block(block_type_t type, int start, int size) {
  * @param mem_strategy Memory Strategy
  * @param insert Insertion function for ready queue depending on scheduling algorithm
  */
-static void process_ready(process_t *process, void *ready, int sim_time, char *mem_strategy, int (*insert)(void *, process_t *)) {
+static void process_ready(process_t *process, void *ready, uint32_t sim_time, char *mem_strategy, int (*insert)(void *, process_t *)) {
 
     set_state(process, READY);
     insert(ready, process);
     if (strcmp(mem_strategy, "best-fit") == 0) {
-        printf("%d,READY,process_name=%s,assigned_at=%d\n", sim_time, get_name(process),
+        printf("%u,READY,process_name=%s,assigned_at=%d\n", sim_time, get_name(process),
                ((block_t *) get_data(get_block_node(process)))->start_address);
     }
 

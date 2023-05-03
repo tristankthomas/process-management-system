@@ -8,6 +8,7 @@
 #define PROCESS_DATA_H
 
 #include <stdio.h>
+#include <stdint.h>
 
 #define MAX_NAME_LEN 8
 #define READ 0
@@ -77,7 +78,7 @@ void set_state(process_t *process, state_t state);
  * @param value Integer value
  * @param field Required field to update
  */
-void set_value(process_t *process, int value, enum value field);
+void set_value(process_t *process, uint32_t value, enum value field);
 
 /**
  * Gets process name

@@ -9,6 +9,8 @@
 
 #define MEM_CAPACITY 2048
 
+#include <stdint.h>
+
 typedef enum state state_t;
 typedef struct block block_t;
 typedef enum block_type block_type_t;
@@ -29,7 +31,7 @@ typedef struct process process_t;
  * @param insert Function to insert process into ready queue
  * @return Ready queue
  */
-void *allocate_memory(list_t *memory, list_t *holes, list_t *input, void *ready, char *mem_strategy, int sim_time,
+void *allocate_memory(list_t *memory, list_t *holes, list_t *input, void *ready, char *mem_strategy, uint32_t sim_time,
                       int (*insert)(void *, process_t *));
 
 /**

@@ -9,13 +9,15 @@
 #include <string.h>
 #include <assert.h>
 #include <unistd.h>
+#include <stdint.h>
 
 #include "process_data.h"
 #include "linked_list.h"
 
 /* Definition of a process */
 struct process {
-    int arrival_time, service_time, service_time_left, mem_requirement, finish_time, turnaround_time;
+    uint32_t arrival_time, service_time, service_time_left, finish_time, turnaround_time;
+    int mem_requirement;
     double overhead;
     char* name;
     state_t state;
@@ -53,10 +55,11 @@ list_t *load_processes(list_t *processes, FILE **file) {
 static process_t *read_process(FILE **file) {
 
     char name[MAX_NAME_LEN] = "";
-    int service_time = 0, time_arrived = 0, mem_requirement = 0;
+    uint32_t service_time = 0, time_arrived = 0;
+    int mem_requirement = 0;
     process_t *process = NULL;
 
-    if (fscanf(*file, "%d %s %d %d", &time_arrived, name, &service_time, &mem_requirement) != EOF) {
+    if (fscanf(*file, "%u %s %u %d", &time_arrived, name, &service_time, &mem_requirement) != EOF) {
 
         process = malloc(sizeof(*process));
         assert(process);
@@ -147,7 +150,7 @@ int update_time(int quantum, process_t *process) {
         return 0;
     }
 
-    if (process->service_time_left - quantum <= 0) {
+    if (process->service_time_left <= quantum) {
         process->service_time_left = 0;
         process->state = FINISHED;
         return 1;
@@ -176,7 +179,7 @@ char *get_name(process_t *process) {
  * @param value Integer value
  * @param field Required field to update
  */
-void set_value(process_t *process, int value, enum value field) {
+void set_value(process_t *process, uint32_t value, enum value field) {
 
     switch (field) {
         case ARRIVAL_TIME:

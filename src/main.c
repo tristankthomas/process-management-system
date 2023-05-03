@@ -26,18 +26,18 @@
 
 void process_args(int argc, char **argv, char **scheduler, char **mem_strategy, int *quantum, FILE **file);
 void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy);
-void finish_process(process_t *process, list_t *finished, list_t *memory, list_t *holes, int proc_remaining, int sim_time,
+void finish_process(process_t *process, list_t *finished, list_t *memory, list_t *holes, int proc_remaining, uint32_t sim_time,
                     char *mem_strategy);
-process_t *run_next_process(void *ready, int sim_time, process_t *(*extract)(void *), int (*is_empty)(void *));
+process_t *run_next_process(void *ready, uint32_t sim_time, process_t *(*extract)(void *), int (*is_empty)(void *));
 void print_statistics(list_t *finished, int makespan);
 double mean(list_t *list, enum value field);
 double max(list_t *list, enum value field);
-void start_real_process(process_t *process, int sim_time);
-uint8_t send_bytes(process_t *process, int num);
+void start_real_process(process_t *process, uint32_t sim_time);
+uint8_t send_bytes(process_t *process, uint32_t num);
 void read_and_verify(process_t *process, uint8_t test_byte);
-void suspend_process(process_t *process, int sim_time);
-void continue_process(process_t *process, int sim_time);
-list_t *update_input(list_t *input, list_t *processes, int sim_time);
+void suspend_process(process_t *process, uint32_t sim_time);
+void continue_process(process_t *process, uint32_t sim_time);
+list_t *update_input(list_t *input, list_t *processes, uint32_t sim_time);
 
 
 /**
@@ -130,8 +130,8 @@ void process_args(int argc, char **argv, char **scheduler, char **mem_strategy, 
  */
 void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) {
 
-    int sim_time = 0, num_cycles, processes_remaining, no_process_running;
-    int num_processes = get_list_size(processes);
+    uint32_t sim_time = 0;
+    int num_cycles, processes_remaining, no_process_running, num_processes = get_list_size(processes);
     // process lists
     list_t *input_queue = create_empty_list(), *finished_queue = create_empty_list();
     void *ready_queue;
@@ -302,13 +302,13 @@ void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) 
  * @param sim_time Current simulation time
  * @return Updated input queue
  */
-list_t *update_input(list_t *input, list_t *processes, int sim_time) {
+list_t *update_input(list_t *input, list_t *processes, uint32_t sim_time) {
 
     if (!get_head(processes)) {
         return NULL;
     }
     // adds processes into input queue when they arrive
-    while ((int) get_value(get_data(get_head(processes)), ARRIVAL_TIME) <= sim_time) {
+    while ((uint32_t) get_value(get_data(get_head(processes)), ARRIVAL_TIME) <= sim_time) {
 
         enqueue(input, dequeue(processes));
 
@@ -328,7 +328,7 @@ list_t *update_input(list_t *input, list_t *processes, int sim_time) {
  * @param process Process to be suspended
  * @param sim_time Current simulation time
  */
-void suspend_process(process_t *process, int sim_time) {
+void suspend_process(process_t *process, uint32_t sim_time) {
 
     int w_status, w;
     // sends sim time to process
@@ -355,7 +355,7 @@ void suspend_process(process_t *process, int sim_time) {
  * @param process Process to be continued
  * @param sim_time Current simulation time
  */
-void continue_process(process_t *process, int sim_time) {
+void continue_process(process_t *process, uint32_t sim_time) {
 
     // sends bytes to process, continues it and verifies sent bytes
     int8_t test_byte = send_bytes(process, sim_time);
@@ -375,14 +375,14 @@ void continue_process(process_t *process, int sim_time) {
  * @param sim_time Current simulation time
  * @param mem_strategy Memory strategy
  */
-void finish_process(process_t *process, list_t *finished, list_t *memory, list_t *holes, int proc_remaining, int sim_time,
+void finish_process(process_t *process, list_t *finished, list_t *memory, list_t *holes, int proc_remaining, uint32_t sim_time,
                     char *mem_strategy) {
 
     char sha256[HASH_SIZE];
 
     set_state(process, FINISHED);
     enqueue(finished, process);
-    printf("%d,FINISHED,process_name=%s,proc_remaining=%d\n", sim_time, get_name(process), proc_remaining);
+    printf("%u,FINISHED,process_name=%s,proc_remaining=%d\n", sim_time, get_name(process), proc_remaining);
 
     // terminate process
     send_bytes(process, sim_time);
@@ -390,7 +390,7 @@ void finish_process(process_t *process, list_t *finished, list_t *memory, list_t
     // reads in hash value from process
     read(get_fd_in(process)[READ], sha256, HASH_SIZE);
 
-    printf("%d,FINISHED-PROCESS,process_name=%s,sha=", sim_time, get_name(process));
+    printf("%u,FINISHED-PROCESS,process_name=%s,sha=", sim_time, get_name(process));
     for (int i = 0; i < HASH_SIZE; i++) {
         printf("%c", sha256[i]);
     }
@@ -411,7 +411,7 @@ void finish_process(process_t *process, list_t *finished, list_t *memory, list_t
  * @param is_empty Function that checks if ready queue is empty
  * @return Process that will be ran
  */
-process_t *run_next_process(void *ready, int sim_time, process_t *(*extract)(void *), int (*is_empty)(void *)) {
+process_t *run_next_process(void *ready, uint32_t sim_time, process_t *(*extract)(void *), int (*is_empty)(void *)) {
 
     if (is_empty(ready)) {
         return NULL;
@@ -427,8 +427,8 @@ process_t *run_next_process(void *ready, int sim_time, process_t *(*extract)(voi
 
 
     set_state(current_process, RUNNING);
-    printf("%d,RUNNING,process_name=%s,remaining_time=%d\n", sim_time, get_name(current_process),
-           (int) get_value(current_process, SERVICE_TIME_LEFT));
+    printf("%u,RUNNING,process_name=%s,remaining_time=%d\n", sim_time, get_name(current_process),
+           (uint32_t) get_value(current_process, SERVICE_TIME_LEFT));
 
     return current_process;
 
@@ -440,7 +440,7 @@ process_t *run_next_process(void *ready, int sim_time, process_t *(*extract)(voi
  * @param process Process to be started
  * @param sim_time Current simulation time
  */
-void start_real_process(process_t *process, int sim_time) {
+void start_real_process(process_t *process, uint32_t sim_time) {
 
     int fd_out[2], fd_in[2];
     pid_t child_pid;
@@ -518,7 +518,7 @@ void read_and_verify(process_t *process, uint8_t test_byte)  {
  * @param num Number to be sent
  * @return Last bytes sent
  */
-uint8_t send_bytes(process_t *process, int num) {
+uint8_t send_bytes(process_t *process, uint32_t num) {
 
     // array of 4 8bit integers
     uint8_t time_bytes[4];
@@ -552,9 +552,9 @@ void print_statistics(list_t *finished, int makespan) {
     avg_overhead = round(mean(finished, OVERHEAD) * 100) / 100;
     max_overhead = round(max(finished, OVERHEAD) * 100) / 100;
 
-    printf("Turnaround time %d\n", avg_turnaround);
+    printf("Turnaround time %u\n", avg_turnaround);
     printf("Time overhead %.2lf %.2lf\n", max_overhead, avg_overhead);
-    printf("Makespan %d\n", makespan);
+    printf("Makespan %u\n", makespan);
 
 }
 
