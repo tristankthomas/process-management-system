@@ -262,6 +262,7 @@ void delete_node_by_data(list_t *list, void *data, void (*free_data)(void *)) {
 
 /**
  * Frees a single node
+ *
  * @param node Node to be freed
  * @param free_data Function to free data
  */

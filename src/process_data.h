@@ -39,6 +39,7 @@ list_t *load_processes(list_t *processes, FILE **file);
 
 /**
  * Frees a process
+ *
  * @param process Process to be freed
  */
 void free_process(process_t *process);
@@ -54,6 +55,7 @@ double get_value(process_t *process, enum value field);
 
 /**
  * Compares service time used for min heap sorting
+ *
  * @param p1 Process 1
  * @param p2 Process 2
  * @return An int based on comparison property
@@ -129,6 +131,7 @@ void set_fds(process_t *process, int fd_in[], int fd_out[]);
 
 /**
  * Gets file descriptor pair for reading from real process
+ *
  * @param process Specified process
  * @return File descriptor pair
  */
@@ -136,6 +139,7 @@ int *get_fd_in(process_t *process);
 
 /**
  * Gets file descriptor pair for writing to real process
+ *
  * @param process Specified process
  * @return File descriptor pair
  */

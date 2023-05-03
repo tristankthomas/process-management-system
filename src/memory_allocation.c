@@ -310,6 +310,7 @@ static void process_ready(process_t *process, void *ready, int sim_time, char *m
 
 /**
  * Compares two ints - used to compare block sizes when inserting block into holes list
+ *
  * @param int1 Pointer to int
  * @param int2 Pointer to int
  * @return Returns 1, 0 or -1 depending on relative int values

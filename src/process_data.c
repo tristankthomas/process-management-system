@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <unistd.h>
 
 #include "process_data.h"
 #include "linked_list.h"
@@ -77,14 +78,18 @@ static process_t *read_process(FILE **file) {
 
 /**
  * Frees a process
+ *
  * @param process Process to be freed
  */
 void free_process(process_t *process) {
 
     free(process->name);
     process->name = NULL;
+    close(process->fd_in[READ]);
+    close(process->fd_out[WRITE]);
     free(process);
     process = NULL;
+
 }
 
 /**
@@ -204,6 +209,7 @@ void set_value(process_t *process, int value, enum value field) {
 
 /**
  * Compares service time used for min heap sorting
+ *
  * @param p1 Process 1
  * @param p2 Process 2
  * @return An int based on comparison property
@@ -271,6 +277,7 @@ void set_fds(process_t *process, int fd_in[], int fd_out[]) {
 
 /**
  * Gets file descriptor pair for reading from real process
+ *
  * @param process Specified process
  * @return File descriptor pair
  */
@@ -281,6 +288,7 @@ int *get_fd_in(process_t *process) {
 
 /**
  * Gets file descriptor pair for writing to real process
+ *
  * @param process Specified process
  * @return File descriptor pair
  */
