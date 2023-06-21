@@ -22,6 +22,8 @@ static void up_heap(min_heap_t *heap, int index, int (compare)(void *, void *));
 static void down_heap(min_heap_t *heap, int index, int (compare)(void *, void *));
 static void swap(void **p1, void **p2);
 
+typedef int (*compare_func)(void *, void *);
+
 
 /**
  * This function creates an empty min heap of size 2
@@ -59,7 +61,7 @@ void insert_data(min_heap_t *heap, void *data) {
     heap->data[heap->num_items++] = data;
 
     // fixes heap (need to use specific comparison function here as num_args(insert_data) == num_args(enqueue))
-    up_heap(heap, heap->num_items - 1, (int (*)(void *, void *)) compare_process);
+    up_heap(heap, heap->num_items - 1, (compare_func) compare_process);
 
 
 }
@@ -88,7 +90,7 @@ void *extract_min(min_heap_t *heap) {
     heap->data[0] = heap->data[heap->num_items];
 
     // fix heap (need to use specific comparison function here as num_args(extract_min) == num_args(dequeue))
-    down_heap(heap, 0, (int (*)(void *, void *)) compare_process);
+    down_heap(heap, 0, (compare_func) compare_process);
 
     return min;
 
@@ -102,7 +104,7 @@ void *extract_min(min_heap_t *heap) {
  * @param heap Heap to be fixed
  * @param index Index of inserted item
  */
-static void up_heap(min_heap_t *heap, int index, int (compare)(void *, void *)) {
+static void up_heap(min_heap_t *heap, int index, compare_func compare) {
     int parent = (index - 1) / 2;
     if (index > 0 && compare(heap->data[parent], heap->data[index]) > 0) {
         void *temp = heap->data[index];
@@ -119,7 +121,7 @@ static void up_heap(min_heap_t *heap, int index, int (compare)(void *, void *)) 
  * @param heap Heap to be fixed
  * @param index Index of deleted data element (0)
  */
- static void down_heap(min_heap_t *heap, int index, int (compare)(void *, void *)) {
+ static void down_heap(min_heap_t *heap, int index, compare_func compare) {
 
     int smallest = index;
     int left = 2 * index + 1;

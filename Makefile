@@ -1,13 +1,13 @@
 
 # declare the compiler and compiler flags
-CC = gcc
-CFLAGS = -Wall -g
-LDFLAGS = -lm
+CC=gcc
+CFLAGS=-Wall -g
+LDFLAGS=-lm
 
 # declare executables and object files
-EXE1 = allocate
-EXE2 = process
-OBJ = process_data.o memory_allocation.o linked_list.o min_heap.o
+EXE1=allocate
+EXE2=process
+OBJ=process_data.o memory_allocation.o linked_list.o min_heap.o
 
 # default target running all
 all: $(EXE1) $(EXE2)

@@ -17,6 +17,7 @@ typedef enum block_type block_type_t;
 typedef struct list list_t;
 typedef struct node node_t;
 typedef struct process process_t;
+typedef int (*insert_func)(void *, process_t *);
 
 
 /**
@@ -32,7 +33,7 @@ typedef struct process process_t;
  * @return Ready queue
  */
 void *allocate_memory(list_t *memory, list_t *holes, list_t *input, void *ready, char *mem_strategy, uint32_t sim_time,
-                      int (*insert)(void *, process_t *));
+                      insert_func insert);
 
 /**
  * Deallocates the memory for a process once it is terminated

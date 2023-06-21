@@ -9,6 +9,9 @@
 
 typedef struct node node_t;
 typedef struct list list_t;
+typedef void (*free_func)(void *);
+typedef int (*compare_func)(void *, void *);
+typedef void *(*get_sort_value_func)(void *);
 
 
 /**
@@ -109,7 +112,7 @@ node_t *create_node(void *data, node_t *next, node_t *prev);
  * @param compare Comparison function
  * @param get_sort_value Function that returns value that determines sort order
  */
-void insert_node_sorted(list_t *list, node_t *node, int (*compare)(void *, void *), void *(*get_sort_value)(void *));
+void insert_node_sorted(list_t *list, node_t *block_node, compare_func compare, get_sort_value_func get_sort_value);
 
 /**
  * Deletes node in a linked list
@@ -137,7 +140,7 @@ node_t *insert_node(list_t* list, void *data, node_t *prev, node_t *next);
  * @param data Data of node to be deleted
  * @param free_data Freeing function for data
  */
-void delete_node_by_data(list_t *list, void *data, void (*free_data)(void *));
+void delete_node_by_data(list_t *list, void *data, free_func free_data);
 
 /**
  * Frees a single node
@@ -145,7 +148,7 @@ void delete_node_by_data(list_t *list, void *data, void (*free_data)(void *));
  * @param node Node to be freed
  * @param free_data Function to free data
  */
-void free_node(node_t *node, void (*free_data)(void *));
+void free_node(node_t *node, free_func free_data);
 
 /**
  * Function that does nothing (used for free_list when data doesnt want to be freed)

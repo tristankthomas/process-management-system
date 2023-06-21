@@ -9,7 +9,6 @@
 #include <string.h>
 #include <assert.h>
 #include <unistd.h>
-#include <stdint.h>
 
 #include "process_data.h"
 #include "linked_list.h"

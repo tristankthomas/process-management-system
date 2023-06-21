@@ -9,7 +9,6 @@
 #include <string.h>
 #include <assert.h>
 #include <unistd.h>
-#include <stdint.h>
 #include <math.h>
 #include <signal.h>
 #include <sys/wait.h>
@@ -24,11 +23,14 @@
 
 #define IMPLEMENTS_REAL_PROCESS
 
+typedef process_t *(*extract_func)(void *);
+typedef int (*is_empty_func)(void *);
+
 void process_args(int argc, char **argv, char **scheduler, char **mem_strategy, int *quantum, FILE **file);
 void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy);
 void finish_process(process_t *process, list_t *finished, list_t *memory, list_t *holes, int proc_remaining, uint32_t sim_time,
                     char *mem_strategy);
-process_t *run_next_process(void *ready, uint32_t sim_time, process_t *(*extract)(void *), int (*is_empty)(void *));
+process_t *run_next_process(void *ready, uint32_t sim_time, extract_func extract, is_empty_func is_empty);
 void print_statistics(list_t *finished, int makespan);
 double mean(list_t *list, enum value field);
 double max(list_t *list, enum value field);
@@ -153,9 +155,9 @@ void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) 
                 update_input(input_queue, processes, sim_time);
                 ready_queue = create_heap();
                 ready_queue = allocate_memory(memory, holes, input_queue, ready_queue, mem_strategy, sim_time,
-                                              (int (*)(void *, process_t *)) insert_data);
-                current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) extract_min,
-                                                   (int (*)(void *)) is_empty_heap);
+                                              (insert_func) insert_data);
+                current_process = run_next_process(ready_queue, sim_time, (extract_func) extract_min,
+                                                   (is_empty_func) is_empty_heap);
                 no_process_running = 0;
                 sim_time += quantum;
                 continue;
@@ -181,7 +183,7 @@ void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) 
 
             // updates ready queue
             ready_queue = allocate_memory(memory, holes, input_queue, ready_queue, mem_strategy, sim_time,
-                                          (int (*)(void *, process_t *)) insert_data);
+                                          (insert_func) insert_data);
 
             // SJF scheduling algorithm
             if (no_process_running) {
@@ -189,8 +191,8 @@ void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) 
                 if (is_empty_heap(ready_queue)) {
                     current_process = NULL;
                 } else {
-                    current_process = run_next_process(ready_queue, sim_time,(process_t *(*)(void *)) extract_min,
-                                                       (int (*)(void *)) is_empty_heap);
+                    current_process = run_next_process(ready_queue, sim_time, (extract_func) extract_min,
+                                                       (is_empty_func) is_empty_heap);
                     no_process_running = 0;
                 }
             } else {
@@ -208,9 +210,9 @@ void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) 
                 update_input(input_queue, processes, sim_time);
                 ready_queue = create_empty_list();
                 ready_queue = allocate_memory(memory, holes, input_queue, ready_queue, mem_strategy, sim_time,
-                                              (int (*)(void *, process_t *)) enqueue);
-                current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) dequeue,
-                                                   (int (*)(void *)) is_empty_list);
+                                              (insert_func) enqueue);
+                current_process = run_next_process(ready_queue, sim_time, (extract_func) dequeue,
+                                                   (is_empty_func) is_empty_list);
                 no_process_running = 0;
                 sim_time += quantum;
                 continue;
@@ -235,7 +237,7 @@ void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) 
             update_input(input_queue, processes, sim_time);
             // updates ready queue
             ready_queue = allocate_memory(memory, holes, input_queue, ready_queue, mem_strategy, sim_time,
-                                          (int (*)(void *, process_t *)) enqueue);
+                                          (insert_func) enqueue);
 
             // RR scheduling algorithm
             if (no_process_running) {
@@ -246,8 +248,8 @@ void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) 
 
                 } else {
                     // runs a new process
-                    current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) dequeue,
-                                                       (int (*)(void *)) is_empty_list);
+                    current_process = run_next_process(ready_queue, sim_time, (extract_func) dequeue,
+                                                       (is_empty_func) is_empty_list);
                     no_process_running = 0;
                 }
 
@@ -262,8 +264,8 @@ void cycle(int quantum, list_t *processes, char *scheduler, char *mem_strategy) 
                     // suspends process and runs next in queue
                     enqueue(ready_queue, current_process);
                     suspend_process(current_process, sim_time);
-                    current_process = run_next_process(ready_queue, sim_time, (process_t *(*)(void *)) dequeue,
-                                                       (int (*)(void *)) is_empty_list);
+                    current_process = run_next_process(ready_queue, sim_time, (extract_func) dequeue,
+                                                       (is_empty_func) is_empty_list);
 
                 }
 
@@ -411,7 +413,7 @@ void finish_process(process_t *process, list_t *finished, list_t *memory, list_t
  * @param is_empty Function that checks if ready queue is empty
  * @return Process that will be ran
  */
-process_t *run_next_process(void *ready, uint32_t sim_time, process_t *(*extract)(void *), int (*is_empty)(void *)) {
+process_t *run_next_process(void *ready, uint32_t sim_time, extract_func extract, is_empty_func is_empty) {
 
     if (is_empty(ready)) {
         return NULL;

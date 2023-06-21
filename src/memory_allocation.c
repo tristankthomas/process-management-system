@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include <stdint.h>
 
 #include "memory_allocation.h"
 #include "linked_list.h"
@@ -25,11 +24,13 @@ struct block {
     int size;
 };
 
+typedef node_t *(*get_dir_func)(node_t *);
+
 static int best_fit(list_t *holes, list_t *memory, process_t *process);
 static void split(process_t *process, node_t *node, list_t *holes, list_t *memory);
-static void process_ready(process_t *process, void *ready, uint32_t sim_time, char *mem_strategy, int (*insert)(void *, process_t *));
+static void process_ready(process_t *process, void *ready, uint32_t sim_time, char *mem_strategy, insert_func insert);
 static void update_memory(list_t *memory, list_t *holes, node_t *main_node, node_t *adj_node);
-static void check_direction(list_t *memory, list_t *holes, node_t *block_node, node_t *(*get_dir)(node_t *));
+static void check_direction(list_t *memory, list_t *holes, node_t *block_node, get_dir_func get_dir);
 static block_t *create_block(block_type_t type, int start, int size);
 
 
@@ -46,7 +47,7 @@ static block_t *create_block(block_type_t type, int start, int size);
  * @return Ready queue
  */
 void *allocate_memory(list_t *memory, list_t *holes, list_t *input, void *ready, char *mem_strategy, uint32_t sim_time,
-                      int (*insert)(void *, process_t *)) {
+                      insert_func insert) {
     process_t *process;
     if (strcmp(mem_strategy, "infinite") == 0) {
 
@@ -155,7 +156,7 @@ static void split(process_t *process, node_t *node, list_t *holes, list_t *memor
 
     } else {
         // inserts the same node (but reduced in size) that was deleted in best_fit
-        insert_node_sorted(holes, node, (int (*)(void *, void *)) compare_ints, (void *(*)(void *)) get_size);
+        insert_node_sorted(holes, node, (compare_func) compare_ints, (get_sort_value_func) get_size);
     }
 
     node_t *new_node = insert_node(memory, new_block, prev_node, node);
@@ -185,15 +186,15 @@ void deallocate_memory(process_t *process, list_t *memory, list_t *holes, char *
 
         // check to right
         if (get_next(block_node)) {
-            check_direction(memory, holes, block_node, get_next);
+            check_direction(memory, holes, block_node, (get_dir_func) get_next);
         }
 
         // check to left
         if (get_prev(block_node)) {
-            check_direction(memory, holes, block_node, get_prev);
+            check_direction(memory, holes, block_node, (get_dir_func) get_prev);
         }
         // need to delete holes from holes list when updating memory
-        insert_node_sorted(holes, block_node, (int (*)(void *, void *)) compare_ints, (void *(*)(void *)) get_size);
+        insert_node_sorted(holes, block_node, (compare_func) compare_ints, (get_sort_value_func) get_size);
         set_block_node(process, NULL);
 
 
@@ -209,7 +210,7 @@ void deallocate_memory(process_t *process, list_t *memory, list_t *holes, char *
  * @param block_node Starting memory node
  * @param get_dir Function that determines which direction (left or right) to traverse
  */
-static void check_direction(list_t *memory, list_t *holes, node_t *block_node, node_t *(*get_dir)(node_t *)) {
+static void check_direction(list_t *memory, list_t *holes, node_t *block_node, get_dir_func get_dir) {
 
     node_t *curr = get_dir(block_node);
     node_t *next;
@@ -298,7 +299,7 @@ static block_t *create_block(block_type_t type, int start, int size) {
  * @param mem_strategy Memory Strategy
  * @param insert Insertion function for ready queue depending on scheduling algorithm
  */
-static void process_ready(process_t *process, void *ready, uint32_t sim_time, char *mem_strategy, int (*insert)(void *, process_t *)) {
+static void process_ready(process_t *process, void *ready, uint32_t sim_time, char *mem_strategy, insert_func insert) {
 
     set_state(process, READY);
     insert(ready, process);

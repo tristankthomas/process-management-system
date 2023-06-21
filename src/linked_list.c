@@ -128,7 +128,7 @@ node_t *create_node(void *data, node_t *next, node_t *prev) {
  * @param compare Comparison function
  * @param get_sort_value Function that returns value that determines sort order
  */
-void insert_node_sorted(list_t *list, node_t *block_node, int (*compare)(void *, void *), void *(*get_sort_value)(void *)) {
+void insert_node_sorted(list_t *list, node_t *block_node, compare_func compare, get_sort_value_func get_sort_value) {
 
     node_t *head = list->head;
     node_t *curr = head;
@@ -244,7 +244,7 @@ void delete_node(list_t *list, node_t *node) {
  * @param data Data of node to be deleted
  * @param free_data Freeing function for data
  */
-void delete_node_by_data(list_t *list, void *data, void (*free_data)(void *)) {
+void delete_node_by_data(list_t *list, void *data, free_func free_data) {
 
     node_t *curr = get_head(list);
 
@@ -266,7 +266,7 @@ void delete_node_by_data(list_t *list, void *data, void (*free_data)(void *)) {
  * @param node Node to be freed
  * @param free_data Function to free data
  */
-void free_node(node_t *node, void (*free_data)(void *)) {
+void free_node(node_t *node, free_func free_data) {
 
     free_data(node->data);
     free(node);
