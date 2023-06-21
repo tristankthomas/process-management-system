@@ -1,0 +1,33 @@
+0,RUNNING,process_name=P0,remaining_time=15
+16,FINISHED,process_name=P0,proc_remaining=1
+16,FINISHED-PROCESS,process_name=P0,sha=51a087dd7f1bf0162848a6c640dc4051056fd2a8068a67926542eebaa9c201ea
+16,RUNNING,process_name=P1,remaining_time=12
+28,FINISHED,process_name=P1,proc_remaining=1
+28,FINISHED-PROCESS,process_name=P1,sha=22e29083ed821ec90438e269afc38529d446ffec5a9a3f225e2bb9464fdfe6fa
+28,RUNNING,process_name=P2,remaining_time=1
+30,FINISHED,process_name=P2,proc_remaining=0
+30,FINISHED-PROCESS,process_name=P2,sha=717a5a172a1f9d24f6be3a8b9fbecfae84c655b5dff478804639f16f5427d7e7
+30,RUNNING,process_name=P3,remaining_time=14
+44,FINISHED,process_name=P3,proc_remaining=0
+44,FINISHED-PROCESS,process_name=P3,sha=9d7a94556a399d816a3d29d8cb30c6b06819b6036794c9ac371132167136f5c4
+44,RUNNING,process_name=P4,remaining_time=13
+58,FINISHED,process_name=P4,proc_remaining=0
+58,FINISHED-PROCESS,process_name=P4,sha=d410942b3982a0340574289c12b56d7a6e11dc566387fc7e8f60295d0215c2e1
+64,RUNNING,process_name=P5,remaining_time=11
+76,FINISHED,process_name=P5,proc_remaining=2
+76,FINISHED-PROCESS,process_name=P5,sha=5f553f4086bd698debcde13fa741acc09c4cb25e5fa6667b07f7f98cd5326317
+76,RUNNING,process_name=P6,remaining_time=6
+82,FINISHED,process_name=P6,proc_remaining=1
+82,FINISHED-PROCESS,process_name=P6,sha=6f4b4f2d55e826ed25dc8cc5141ac9dbf0aecf6f48521328095cd0a04e7f2d18
+82,RUNNING,process_name=P7,remaining_time=7
+90,FINISHED,process_name=P7,proc_remaining=0
+90,FINISHED-PROCESS,process_name=P7,sha=c5e4c8003f641edb10c94fccc072f0e3738a75148e1e0daae197cb81d676bb9d
+98,RUNNING,process_name=P9,remaining_time=2
+100,FINISHED,process_name=P9,proc_remaining=1
+100,FINISHED-PROCESS,process_name=P9,sha=0b2d6ad64587a3b6286f3c6ed0aad3c41f943744e1d5857b7bea857cc9342881
+100,RUNNING,process_name=P8,remaining_time=17
+118,FINISHED,process_name=P8,proc_remaining=0
+118,FINISHED-PROCESS,process_name=P8,sha=df20c4fec8daebcd7dbeca3ac54d038addf3bd6fcd90c9177e7e3860a34d7520
+Turnaround time 15
+Time overhead 5.00 1.95
+Makespan 118

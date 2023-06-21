@@ -1,0 +1,36 @@
+0,RUNNING,process_name=P0,remaining_time=52
+52,FINISHED,process_name=P0,proc_remaining=2
+52,FINISHED-PROCESS,process_name=P0,sha=b5dc28a0c0ace632e0ec6d6c9ca18f34e7d30b704e9446743684558f347938c4
+52,RUNNING,process_name=P1,remaining_time=59
+112,FINISHED,process_name=P1,proc_remaining=5
+112,FINISHED-PROCESS,process_name=P1,sha=e0a50e50e6bae13643b0308c5832693b66274b562c8c9a715afb1f254929f5e8
+112,RUNNING,process_name=P3,remaining_time=41
+154,FINISHED,process_name=P3,proc_remaining=6
+154,FINISHED-PROCESS,process_name=P3,sha=acad9495f3cdcebebcc698aa2e866697f707716c4f770c90e6e1dccd1a711825
+154,RUNNING,process_name=P9,remaining_time=22
+176,FINISHED,process_name=P9,proc_remaining=7
+176,FINISHED-PROCESS,process_name=P9,sha=6724c0684ee2f67b1dde5795fea11067ce1af2f5257c2e118b8486d5a97eb32d
+176,RUNNING,process_name=P10,remaining_time=32
+208,FINISHED,process_name=P10,proc_remaining=6
+208,FINISHED-PROCESS,process_name=P10,sha=df21c643228b2a53f9c421cf330d979b10c08b69289fefbd92785cbf1831f880
+208,RUNNING,process_name=P4,remaining_time=61
+270,FINISHED,process_name=P4,proc_remaining=5
+270,FINISHED-PROCESS,process_name=P4,sha=0bf7618e65a7770d383b8e16025839809d943f7a5c12d9ab4c0a49963bc06d3b
+270,RUNNING,process_name=P5,remaining_time=96
+366,FINISHED,process_name=P5,proc_remaining=4
+366,FINISHED-PROCESS,process_name=P5,sha=539ab2dbd70a48e41269a14aec9ab30021f9602459dbafb86c9ab3278f1d36a3
+366,RUNNING,process_name=P6,remaining_time=106
+472,FINISHED,process_name=P6,proc_remaining=3
+472,FINISHED-PROCESS,process_name=P6,sha=18eb4c8ec4d2707a23ca36acc80e46ac877232d0028a81cb0b3c0300aa4b1a65
+472,RUNNING,process_name=P8,remaining_time=108
+580,FINISHED,process_name=P8,proc_remaining=2
+580,FINISHED-PROCESS,process_name=P8,sha=83ef10c0212e2b18d47e1036458f01022470c042bd2777fa0d9e0db1e8577043
+580,RUNNING,process_name=P2,remaining_time=121
+702,FINISHED,process_name=P2,proc_remaining=1
+702,FINISHED-PROCESS,process_name=P2,sha=f67cbb49be74ddf90c762fed4678cb049ff24f7fdeaf1fd814c8e0a231f6b938
+702,RUNNING,process_name=P7,remaining_time=132
+834,FINISHED,process_name=P7,proc_remaining=0
+834,FINISHED-PROCESS,process_name=P7,sha=21030038571bf0b966b9f8f5d6a1674d6fd670fa3b133c612f873bf76abe19f0
+Turnaround time 264
+Time overhead 5.51 2.81
+Makespan 834

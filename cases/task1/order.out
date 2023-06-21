@@ -1,0 +1,27 @@
+0,RUNNING,process_name=COMP2302,remaining_time=20
+20,FINISHED,process_name=COMP2302,proc_remaining=7
+20,FINISHED-PROCESS,process_name=COMP2302,sha=1cf7b2e5671694368a2ca27a868c2cd43dbebd04b727e1d1b3d5de36c5324f9a
+20,RUNNING,process_name=COMP2301,remaining_time=10
+30,FINISHED,process_name=COMP2301,proc_remaining=6
+30,FINISHED-PROCESS,process_name=COMP2301,sha=4df0f00d10a8d9185b12ed830cf1400c688491bd80445976d51c718a0e3e06c4
+30,RUNNING,process_name=COMP2319,remaining_time=10
+40,FINISHED,process_name=COMP2319,proc_remaining=5
+40,FINISHED-PROCESS,process_name=COMP2319,sha=cfd62dba34d01f279bb6462771340c10eefbb610e735d6fe068ce497145e8407
+40,RUNNING,process_name=COMP2307,remaining_time=10
+50,FINISHED,process_name=COMP2307,proc_remaining=4
+50,FINISHED-PROCESS,process_name=COMP2307,sha=723db155361fa7fe12d5342008cb3d355cda1d8bb6b1b262e3035d933d20f9b2
+50,RUNNING,process_name=COMP2308,remaining_time=10
+60,FINISHED,process_name=COMP2308,proc_remaining=3
+60,FINISHED-PROCESS,process_name=COMP2308,sha=9b9b8d48392ead44c14a966b9eb454c6a6b088e79d233ff261d5461153dfbdc4
+60,RUNNING,process_name=COMP2304,remaining_time=20
+80,FINISHED,process_name=COMP2304,proc_remaining=2
+80,FINISHED-PROCESS,process_name=COMP2304,sha=4ce84dc996913b244eeff240906dcee03b043c1ae7937d989d09aa6892464346
+80,RUNNING,process_name=COMP2305,remaining_time=20
+100,FINISHED,process_name=COMP2305,proc_remaining=1
+100,FINISHED-PROCESS,process_name=COMP2305,sha=2ec93c481c80c26af74e9b6f691a57322eac2e1c3b3c3acdec8d3da800f87524
+100,RUNNING,process_name=COMP2306,remaining_time=20
+120,FINISHED,process_name=COMP2306,proc_remaining=0
+120,FINISHED-PROCESS,process_name=COMP2306,sha=25e2c67336ddcfd52df0e05bd15ba881b3f044fcee2c21e32b94852d045fe082
+Turnaround time 62
+Time overhead 6.00 4.13
+Makespan 120
