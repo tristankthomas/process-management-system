@@ -172,7 +172,7 @@ void insert_node_sorted(list_t *list, node_t *block_node, compare_func compare, 
  * @param list Linked list to be freed
  * @param free_data Function for freeing data
  */
-void free_list(list_t *list, void (*free_data)(void *)) {
+void free_list(list_t *list, free_func free_data) {
 
     node_t *curr, *prev;
 
